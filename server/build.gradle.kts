@@ -16,6 +16,13 @@ application {
 dependencies {
     implementation(projects.shared)
     implementation(projects.libraries.bduiBackend.core)
+    implementation(projects.libraries.bduiBackend.dsl)
+    implementation(projects.libraries.bduiBackend.mapper)
+    implementation(projects.libraries.bduiBackend.renderer)
+    implementation(projects.libraries.bduiBackend.data)
+    implementation(projects.libraries.bduiBackend.runtime)
+    implementation(projects.libraries.bdui.contract)
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.2")
     implementation(libs.logback)
     implementation(libs.ktor.serverCore)
     implementation(libs.ktor.serverNetty)
