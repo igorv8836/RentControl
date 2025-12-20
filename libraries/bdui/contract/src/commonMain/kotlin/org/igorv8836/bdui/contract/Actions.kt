@@ -39,3 +39,29 @@ data class CustomAction(
     val name: String,
     val parameters: Map<String, String> = emptyMap(),
 ) : Action
+
+data class SetVariableAction(
+    override val id: String,
+    val key: String,
+    val value: VariableValue,
+    val scope: VariableScope = VariableScope.Global,
+    val policy: StoragePolicy = StoragePolicy.InMemory,
+    val ttlMillis: Long? = null,
+    val screenId: String? = null,
+) : Action
+
+data class IncrementVariableAction(
+    override val id: String,
+    val key: String,
+    val delta: Double = 1.0,
+    val scope: VariableScope = VariableScope.Global,
+    val policy: StoragePolicy = StoragePolicy.InMemory,
+    val screenId: String? = null,
+) : Action
+
+data class RemoveVariableAction(
+    override val id: String,
+    val key: String,
+    val scope: VariableScope = VariableScope.Global,
+    val screenId: String? = null,
+) : Action

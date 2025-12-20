@@ -4,12 +4,15 @@ import org.igorv8836.bdui.contract.Action
 import org.igorv8836.bdui.contract.AnalyticsAction
 import org.igorv8836.bdui.contract.CustomAction
 import org.igorv8836.bdui.contract.ForwardAction
+import org.igorv8836.bdui.contract.IncrementVariableAction
 import org.igorv8836.bdui.contract.Overlay
 import org.igorv8836.bdui.contract.OverlayAction
 import org.igorv8836.bdui.contract.Popup
 import org.igorv8836.bdui.contract.PopupAction
 import org.igorv8836.bdui.contract.Route
 import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.RemoveVariableAction
+import org.igorv8836.bdui.contract.SetVariableAction
 import org.igorv8836.bdui.contract.SubmitAction
 
 interface Navigator {
@@ -43,6 +46,7 @@ class ActionValidator(
 class ActionExecutor(
     private val navigator: Navigator,
     private val analytics: (String, Map<String, String>) -> Unit = { _, _ -> },
+    private val variables: VariableAdapter? = null,
     private val validator: ActionValidator = ActionValidator(),
 ) {
     suspend fun execute(action: Action, context: ActionContext) {
@@ -70,6 +74,41 @@ class ActionExecutor(
 
             is CustomAction -> {
                 analytics("custom_${action.name}", action.parameters)
+            }
+
+            is SetVariableAction -> {
+                val adapter = variables ?: context.variables
+                    ?: error("Variable adapter is not configured for SetVariableAction")
+                adapter.set(
+                    key = action.key,
+                    value = action.value,
+                    scope = action.scope,
+                    screenId = action.screenId ?: context.screenId,
+                    policy = action.policy,
+                    ttlMillis = action.ttlMillis,
+                )
+            }
+
+            is IncrementVariableAction -> {
+                val adapter = variables ?: context.variables
+                    ?: error("Variable adapter is not configured for IncrementVariableAction")
+                adapter.increment(
+                    key = action.key,
+                    delta = action.delta,
+                    scope = action.scope,
+                    screenId = action.screenId ?: context.screenId,
+                    policy = action.policy,
+                )
+            }
+
+            is RemoveVariableAction -> {
+                val adapter = variables ?: context.variables
+                    ?: error("Variable adapter is not configured for RemoveVariableAction")
+                adapter.remove(
+                    key = action.key,
+                    scope = action.scope,
+                    screenId = action.screenId ?: context.screenId,
+                )
             }
         }
     }

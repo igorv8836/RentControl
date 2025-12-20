@@ -42,25 +42,26 @@ import org.igorv8836.bdui.contract.ContainerDirection
 @Composable
 fun TextComponent(
     node: TextElement,
-    resolve: (String) -> String,
+    text: String,
     modifier: Modifier = Modifier,
 ) {
-    Text(text = resolve(node.textKey), modifier = modifier)
+    Text(text = text, modifier = modifier)
 }
 
 @Composable
 fun ButtonComponent(
     node: ButtonElement,
-    resolve: (String) -> String,
+    title: String,
+    enabled: Boolean,
     onAction: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Button(
-        onClick = { if (node.isEnabled) onAction(node.actionId) },
-        enabled = node.isEnabled,
+        onClick = { if (enabled) onAction(node.actionId) },
+        enabled = enabled,
         modifier = modifier,
     ) {
-        Text(text = resolve(node.titleKey))
+        Text(text = title)
     }
 }
 
@@ -200,8 +201,10 @@ fun DividerComponent(
 @Composable
 fun ListItemComponent(
     node: ListItemElement,
-    resolve: (String) -> String,
+    title: String,
+    subtitle: String?,
     onAction: ((String) -> Unit)?,
+    enabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -212,20 +215,20 @@ fun ListItemComponent(
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
-            text = resolve(node.titleKey),
+            text = title,
             style = MaterialTheme.typography.bodyLarge,
         )
-        node.subtitleKey?.let {
+        subtitle?.let {
             Text(
-                text = resolve(it),
+                text = it,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         val actionId = node.actionId
-        if (actionId != null && onAction != null) {
+        if (actionId != null && onAction != null && enabled) {
             Button(onClick = { onAction(actionId) }) {
-                Text(text = resolve(node.titleKey))
+                Text(text = title)
             }
         }
     }

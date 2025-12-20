@@ -26,10 +26,6 @@ data class Analytics(
     val params: Map<String, String> = emptyMap(),
 )
 
-data class Binding(
-    val key: String,
-)
-
 data class ValidationRule(
     val fieldId: String,
     val required: Boolean = false,

@@ -13,11 +13,16 @@ import org.igorv8836.bdui.actions.ActionExecutor
 import org.igorv8836.bdui.actions.ActionRegistry
 import org.igorv8836.bdui.actions.Navigator
 import org.igorv8836.bdui.actions.Router
+import org.igorv8836.bdui.actions.VariableAdapter
 import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.StoragePolicy
 import org.igorv8836.bdui.contract.UiEvent
+import org.igorv8836.bdui.contract.VariableScope
+import org.igorv8836.bdui.contract.VariableValue
 
 interface ScreenController {
     val state: StateFlow<ScreenState>
+    val variableStore: VariableStore
     fun onOpen()
     fun onAppear()
     fun onFullyVisible()
@@ -32,12 +37,19 @@ class DefaultScreenController(
     private val router: Router,
     private val analytics: (String, Map<String, String>) -> Unit = { _, _ -> },
     private val externalScope: CoroutineScope,
+    providedVariableStore: VariableStore? = null,
 ) : ScreenController {
 
     private val job = SupervisorJob()
     private val scope = CoroutineScope(externalScope.coroutineContext + job)
     private val store = ScreenStore(repository, scope)
-    private val executor = ActionExecutor(navigator = navigator, analytics = analytics)
+    override val variableStore: VariableStore = providedVariableStore ?: VariableStore(scope = externalScope)
+    private val variableAdapter: VariableAdapter = VariableStoreAdapter(variableStore)
+    private val executor = ActionExecutor(
+        navigator = navigator,
+        analytics = analytics,
+        variables = variableAdapter,
+    )
     private val actionRegistry = ActionRegistry(
         handlers = emptyMap<String, ActionHandler>(),
         fallback = null,
@@ -101,6 +113,8 @@ class DefaultScreenController(
                     router = router,
                     analytics = analytics,
                     navigator = navigator,
+                    variables = variableAdapter,
+                    screenId = screenId,
                 ),
             )
         }
@@ -126,6 +140,8 @@ class DefaultScreenController(
                         router = router,
                         analytics = analytics,
                         navigator = navigator,
+                        variables = variableAdapter,
+                        screenId = screenId,
                     ),
                 )
             }
@@ -138,6 +154,7 @@ class ScreenControllerFactory(
     private val navigator: Navigator,
     private val router: Router,
     private val analytics: (String, Map<String, String>) -> Unit = { _, _ -> },
+    private val variableStore: VariableStore? = null,
 ) {
     fun create(screenId: String, scope: CoroutineScope): DefaultScreenController =
         DefaultScreenController(
@@ -147,5 +164,38 @@ class ScreenControllerFactory(
             router = router,
             analytics = analytics,
             externalScope = scope,
+            providedVariableStore = variableStore ?: VariableStore(scope = scope),
         )
+}
+
+private class VariableStoreAdapter(
+    private val store: VariableStore,
+) : VariableAdapter {
+    override fun peek(key: String, scope: VariableScope, screenId: String?): VariableValue? =
+        store.peek(key, scope, screenId)
+
+    override suspend fun set(
+        key: String,
+        value: VariableValue,
+        scope: VariableScope,
+        screenId: String?,
+        policy: StoragePolicy,
+        ttlMillis: Long?,
+    ) {
+        store.set(key, value, scope, screenId, policy, ttlMillis)
+    }
+
+    override suspend fun increment(
+        key: String,
+        delta: Double,
+        scope: VariableScope,
+        screenId: String?,
+        policy: StoragePolicy,
+    ) {
+        store.increment(key, delta, scope, screenId, policy)
+    }
+
+    override suspend fun remove(key: String, scope: VariableScope, screenId: String?) {
+        store.remove(key, scope, screenId)
+    }
 }

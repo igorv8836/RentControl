@@ -20,7 +20,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
@@ -50,6 +53,12 @@ import org.igorv8836.bdui.contract.Screen
 import org.igorv8836.bdui.contract.TextElement
 import org.igorv8836.bdui.runtime.ScreenState
 import org.igorv8836.bdui.runtime.ScreenStatus
+import org.igorv8836.bdui.runtime.VariableStore
+import org.igorv8836.bdui.contract.Binding
+import org.igorv8836.bdui.contract.Condition
+import org.igorv8836.bdui.contract.MissingVariableBehavior
+import org.igorv8836.bdui.contract.VariableScope
+import org.igorv8836.bdui.contract.VariableValue
 
 @Composable
 fun ScreenHost(
@@ -57,6 +66,8 @@ fun ScreenHost(
     router: Router,
     actionRegistry: ActionRegistry,
     resolve: (String) -> String,
+    variableStore: VariableStore? = null,
+    screenId: String? = null,
     modifier: Modifier = Modifier,
     analytics: (String, Map<String, String>) -> Unit = { _, _ -> },
     onRefresh: (() -> Unit)? = null,
@@ -66,6 +77,8 @@ fun ScreenHost(
     onDisappear: (() -> Unit)? = null,
 ) {
     val scope = rememberCoroutineScope()
+    val variables = remember(variableStore) { variableStore ?: VariableStore(scope = scope) }
+    val variablesVersion by variables.changes.collectAsState()
     val appeared = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     val fullyVisible = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
 
@@ -95,10 +108,13 @@ fun ScreenHost(
                 screen = screen,
                 onAction = { actionId -> dispatch(actionId, screen) },
                 resolve = resolve,
+                variables = variables,
+                screenId = screenId ?: screen.id,
                 modifier = modifier,
                 state = state,
                 onRefresh = onRefresh,
                 onLoadNextPage = onLoadNextPage,
+                variablesVersion = variablesVersion,
             )
         }
     }
@@ -127,6 +143,9 @@ private fun RenderScreen(
     screen: Screen,
     onAction: (String) -> Unit,
     resolve: (String) -> String,
+    variables: VariableStore,
+    screenId: String,
+    variablesVersion: Long,
     modifier: Modifier = Modifier,
     state: ScreenState,
     onRefresh: (() -> Unit)?,
@@ -134,6 +153,13 @@ private fun RenderScreen(
 ) {
     val root = screen.layout.root
     val hasLazyList = containsLazyList(root)
+    val resolver = remember(screen.id, variablesVersion) {
+        BindingResolver(
+            variables = variables,
+            screenId = screenId,
+            translate = resolve,
+        )
+    }
     val contentModifier = Modifier
         .fillMaxSize()
         .padding(16.dp)
@@ -165,7 +191,7 @@ private fun RenderScreen(
                 RenderNode(
                     node = root,
                     onAction = onAction,
-                    resolve = resolve,
+                    resolver = resolver,
                     modifier = Modifier.fillMaxWidth(),
                     pagination = paginationConfig,
                 )
@@ -188,7 +214,7 @@ private fun RenderScreen(
                 RenderNode(
                     node = root,
                     onAction = onAction,
-                    resolve = resolve,
+                    resolver = resolver,
                     modifier = Modifier.fillMaxWidth(),
                     pagination = paginationConfig,
                 )
@@ -218,6 +244,89 @@ private fun containsLazyList(node: ComponentNode): Boolean =
         else -> false
     }
 
+private class BindingResolver(
+    private val variables: VariableStore,
+    private val screenId: String,
+    private val translate: (String) -> String,
+) {
+    fun text(key: String?, binding: Binding?, template: String?): String {
+        val direct = binding?.let { resolveBinding(it) }
+        if (direct != null) return direct
+        val base = template ?: key?.takeIf { it.isNotBlank() }?.let(translate)
+        return base?.let { interpolate(it) } ?: ""
+    }
+
+    fun isVisible(condition: Condition?): Boolean {
+        if (condition == null) return true
+        val value = resolveValue(condition.binding)
+        val exists = value != null
+        if (!exists) {
+            return !condition.exists
+        }
+        var result = condition.equals?.let { equalsValue(value!!, it) } ?: isTruthy(value!!)
+        if (condition.negate) result = !result
+        return result
+    }
+
+    fun isEnabled(base: Boolean, condition: Condition?): Boolean {
+        if (!base) return false
+        return isVisible(condition)
+    }
+
+    private fun resolveBinding(binding: Binding): String? {
+        val value = resolveValue(binding)
+        return value?.let { valueToString(it) }
+    }
+
+    private fun resolveValue(binding: Binding): VariableValue? {
+        val stored = variables.peek(binding.key, binding.scope, screenId)
+        return when {
+            stored != null -> stored
+            binding.missingBehavior == MissingVariableBehavior.Default -> binding.default
+            binding.missingBehavior == MissingVariableBehavior.Error -> throw IllegalStateException("Variable '${binding.key}' is missing")
+            else -> null
+        }
+    }
+
+    private fun interpolate(template: String): String {
+        val regex = Regex("\\{\\{\\s*(.*?)\\s*\\}\\}")
+        return regex.replace(template) { match ->
+            val key = match.groupValues.getOrNull(1)?.trim().orEmpty()
+            val resolved = variables.peek(key, VariableScope.Global, screenId)
+            resolved?.let { valueToString(it) } ?: ""
+        }
+    }
+
+    private fun isTruthy(value: VariableValue): Boolean =
+        when (value) {
+            is VariableValue.BoolValue -> value.value
+            is VariableValue.NumberValue -> value.value != 0.0
+            is VariableValue.StringValue -> value.value.isNotEmpty()
+            is VariableValue.ObjectValue -> value.value.isNotEmpty()
+        }
+
+    private fun equalsValue(left: VariableValue, right: VariableValue): Boolean =
+        when {
+            left is VariableValue.StringValue && right is VariableValue.StringValue -> left.value == right.value
+            left is VariableValue.NumberValue && right is VariableValue.NumberValue -> left.value == right.value
+            left is VariableValue.BoolValue && right is VariableValue.BoolValue -> left.value == right.value
+            left is VariableValue.ObjectValue && right is VariableValue.ObjectValue -> left.value == right.value
+            else -> false
+        }
+
+    private fun valueToString(value: VariableValue): String =
+        when (value) {
+            is VariableValue.StringValue -> value.value
+            is VariableValue.NumberValue -> value.value.toString()
+            is VariableValue.BoolValue -> value.value.toString()
+            is VariableValue.ObjectValue -> value.value.entries.joinToString(
+                separator = ", ",
+                prefix = "{",
+                postfix = "}",
+            ) { (key, inner) -> "$key:${valueToString(inner)}" }
+        }
+}
+
 private data class PaginationConfig(
     val prefetchDistance: Int,
     val onLoadNextPage: (() -> Unit)?,
@@ -228,58 +337,77 @@ private data class PaginationConfig(
 private fun RenderNode(
     node: ComponentNode,
     onAction: (String) -> Unit,
-    resolve: (String) -> String,
+    resolver: BindingResolver,
     modifier: Modifier = Modifier,
     pagination: PaginationConfig? = null,
 ) {
     when (node) {
-        is TextElement -> TextComponent(node = node, resolve = resolve, modifier = modifier)
+        is TextElement -> {
+            if (!resolver.isVisible(node.visibleIf)) return
+            val text = resolver.text(node.textKey, node.binding, node.template)
+            TextComponent(node = node, text = text, modifier = modifier)
+        }
         is ButtonElement -> ButtonComponent(
             node = node,
-            resolve = resolve,
+            title = resolver.text(node.titleKey, node.titleBinding, null),
+            enabled = resolver.isEnabled(node.isEnabled, node.enabledIf),
             onAction = onAction,
             modifier = modifier,
         )
 
-        is ImageElement -> ImagePlaceholder(node = node, modifier = modifier)
-        is Container -> ContainerComponent(
-            node = node,
-            renderChild = { child, childModifier ->
-                RenderNode(
-                    node = child,
-                    onAction = onAction,
-                    resolve = resolve,
-                    modifier = childModifier,
-                    pagination = pagination,
-                )
-            },
-            modifier = modifier,
-        )
+        is ImageElement -> if (resolver.isVisible(node.visibleIf)) {
+            ImagePlaceholder(node = node, modifier = modifier)
+        }
+        is Container -> if (resolver.isVisible(node.visibleIf)) {
+            ContainerComponent(
+                node = node,
+                renderChild = { child, childModifier ->
+                    RenderNode(
+                        node = child,
+                        onAction = onAction,
+                        resolver = resolver,
+                        modifier = childModifier,
+                        pagination = pagination,
+                    )
+                },
+                modifier = modifier,
+            )
+        }
 
-        is LazyListElement -> LazyListComponent(
-            node = node,
-            renderChild = { child, childModifier ->
-                RenderNode(
-                    node = child,
-                    onAction = onAction,
-                    resolve = resolve,
-                    modifier = childModifier,
-                    pagination = pagination,
-                )
-            },
-            modifier = modifier,
-            onLoadNextPage = pagination?.onLoadNextPage,
-            prefetchDistance = pagination?.prefetchDistance ?: 2,
-            loadingMore = pagination?.loadingMore ?: false,
-        )
-        is SpacerElement -> SpacerComponent(node = node, modifier = modifier)
-        is DividerElement -> DividerComponent(node = node, modifier = modifier)
-        is ListItemElement -> ListItemComponent(
-            node = node,
-            resolve = resolve,
-            onAction = { id -> onAction(id) },
-            modifier = modifier,
-        )
+        is LazyListElement -> if (resolver.isVisible(node.visibleIf)) {
+            LazyListComponent(
+                node = node,
+                renderChild = { child, childModifier ->
+                    RenderNode(
+                        node = child,
+                        onAction = onAction,
+                        resolver = resolver,
+                        modifier = childModifier,
+                        pagination = pagination,
+                    )
+                },
+                modifier = modifier,
+                onLoadNextPage = pagination?.onLoadNextPage,
+                prefetchDistance = pagination?.prefetchDistance ?: 2,
+                loadingMore = pagination?.loadingMore ?: false,
+            )
+        }
+        is SpacerElement -> if (resolver.isVisible(node.visibleIf)) {
+            SpacerComponent(node = node, modifier = modifier)
+        }
+        is DividerElement -> if (resolver.isVisible(node.visibleIf)) {
+            DividerComponent(node = node, modifier = modifier)
+        }
+        is ListItemElement -> if (resolver.isVisible(node.visibleIf)) {
+            ListItemComponent(
+                node = node,
+                title = resolver.text(node.titleKey, node.titleBinding, null),
+                subtitle = node.subtitleKey?.let { key -> resolver.text(key, node.subtitleBinding, null) },
+                onAction = { id -> onAction(id) },
+                enabled = resolver.isEnabled(true, node.enabledIf),
+                modifier = modifier,
+            )
+        }
     }
 }
 

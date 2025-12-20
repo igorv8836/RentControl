@@ -7,6 +7,8 @@ data class ActionContext(
     val router: Router,
     val analytics: (String, Map<String, String>) -> Unit = { _, _ -> },
     val navigator: Navigator? = null,
+    val variables: VariableAdapter? = null,
+    val screenId: String? = null,
 )
 
 interface Router {
