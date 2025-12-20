@@ -46,6 +46,7 @@ include(
     ":libraries:bdui:platform-ios",
     ":libraries:bdui:testing",
     ":libraries:bdui:common",
+    ":libraries:bdui-backend:core",
     ":libraries:bdui:tooling",
     ":libraries:bdui:cache",
     ":libraries:bdui:network",
