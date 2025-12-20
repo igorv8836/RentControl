@@ -51,6 +51,7 @@ include(
     ":libraries:bdui-backend:mapper",
     ":libraries:bdui-backend:renderer",
     ":libraries:bdui-backend:data",
+    ":libraries:bdui-backend:runtime",
     ":libraries:bdui:tooling",
     ":libraries:bdui:cache",
     ":libraries:bdui:network",

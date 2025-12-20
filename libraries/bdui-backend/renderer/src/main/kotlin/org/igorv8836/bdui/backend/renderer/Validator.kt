@@ -11,7 +11,7 @@ import org.igorv8836.bdui.contract.Scaffold
 import org.igorv8836.bdui.contract.Screen
 import org.igorv8836.bdui.contract.TextElement
 
-internal fun validateScreen(screen: Screen, limits: LimitConfig): List<ValidationIssue> {
+fun validateScreen(screen: Screen, limits: LimitConfig): List<ValidationIssue> {
     val issues = mutableListOf<ValidationIssue>()
 
     if (screen.id.isBlank()) {

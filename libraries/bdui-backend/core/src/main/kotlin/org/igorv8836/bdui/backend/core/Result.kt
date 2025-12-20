@@ -13,6 +13,12 @@ sealed class BackendResult<out T> {
             is Failure -> this
         }
 
+    inline fun <R> flatMap(transform: (T) -> BackendResult<R>): BackendResult<R> =
+        when (this) {
+            is Success -> transform(value)
+            is Failure -> this
+        }
+
     inline fun onSuccess(block: (T) -> Unit): BackendResult<T> =
         also { if (this is Success) block(value) }
 
