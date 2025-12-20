@@ -20,6 +20,7 @@ kotlin {
         commonMain.dependencies {
             api(projects.libraries.bdui.contract)
             api(libs.kotlinx.coroutines.core)
+            api(projects.libraries.bdui.actions)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

@@ -18,11 +18,14 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.igorv8836.bdui.actions.ActionContext
 import org.igorv8836.bdui.actions.ActionRegistry
 import org.igorv8836.bdui.actions.Router
@@ -58,8 +61,14 @@ fun ScreenHost(
     analytics: (String, Map<String, String>) -> Unit = { _, _ -> },
     onRefresh: (() -> Unit)? = null,
     onLoadNextPage: (() -> Unit)? = null,
+    onAppear: (() -> Unit)? = null,
+    onFullyVisible: (() -> Unit)? = null,
+    onDisappear: (() -> Unit)? = null,
 ) {
     val scope = rememberCoroutineScope()
+    val appeared = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    val fullyVisible = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+
     val dispatch = { actionId: String, screen: Screen ->
         val action = screen.actions.firstOrNull { it.id == actionId }
         if (action != null) {
@@ -91,6 +100,24 @@ fun ScreenHost(
                 onRefresh = onRefresh,
                 onLoadNextPage = onLoadNextPage,
             )
+        }
+    }
+
+    LaunchedEffect(state.status) {
+        if (state.status == ScreenStatus.Ready && !appeared.value) {
+            appeared.value = true
+            onAppear?.invoke()
+            androidx.compose.runtime.withFrameNanos { _ -> }
+            if (!fullyVisible.value) {
+                fullyVisible.value = true
+                onFullyVisible?.invoke()
+            }
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            onDisappear?.invoke()
         }
     }
 }
