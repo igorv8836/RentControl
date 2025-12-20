@@ -5,14 +5,14 @@ import org.igorv8836.bdui.backend.core.BackendResult
 import org.igorv8836.bdui.backend.core.ExecutionContext
 import org.igorv8836.bdui.backend.core.LimitConfig
 import org.igorv8836.bdui.backend.renderer.render
-import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.RemoteScreen
 import java.util.ServiceLoader
 
 class BackendEngine private constructor(
     private val registry: BackendRegistry,
     private val limits: LimitConfig,
 ) {
-    fun render(screenId: String, input: Any?, context: ExecutionContext = ExecutionContext()): BackendResult<Screen> {
+    fun render(screenId: String, input: Any?, context: ExecutionContext = ExecutionContext()): BackendResult<RemoteScreen> {
         val entry = registry.mappers[screenId]
             ?: return BackendResult.failure(
                 BackendError.Mapping(
@@ -20,7 +20,7 @@ class BackendEngine private constructor(
                 ),
             )
         return entry.map(input, context).flatMap { screen ->
-            registry.validators.fold<ScreenValidator, BackendResult<Screen>>(BackendResult.success(screen)) { acc, validator ->
+            registry.validators.fold(BackendResult.success(screen)) { acc, validator ->
                 acc.flatMap { current ->
                     val issues = validator(current)
                     if (issues.isEmpty()) BackendResult.success(current)

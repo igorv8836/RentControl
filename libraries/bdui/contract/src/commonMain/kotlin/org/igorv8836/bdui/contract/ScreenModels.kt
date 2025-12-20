@@ -1,6 +1,6 @@
 package org.igorv8836.bdui.contract
 
-data class Screen(
+data class RemoteScreen(
     val id: String,
     val version: Int,
     val layout: Layout,

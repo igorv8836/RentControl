@@ -29,7 +29,7 @@ fun ScreenViewController(
         actionRegistry = actionRegistry,
         resolve = resolve,
         variableStore = controller?.variableStore,
-        screenId = controller?.state?.value?.screen?.id,
+        screenId = controller?.state?.value?.remoteScreen?.id,
         analytics = analytics,
         onRefresh = { controller?.refresh() },
         onLoadNextPage = { controller?.loadNextPage() },

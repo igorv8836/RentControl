@@ -2,7 +2,6 @@ package org.igorv8836.bdui.runtime
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -13,7 +12,7 @@ import org.igorv8836.bdui.actions.ActionRegistry
 import org.igorv8836.bdui.actions.Navigator
 import org.igorv8836.bdui.actions.Router
 import org.igorv8836.bdui.actions.VariableAdapter
-import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.RemoteScreen
 import org.igorv8836.bdui.contract.ScreenEventType
 import org.igorv8836.bdui.contract.StoragePolicy
 import org.igorv8836.bdui.contract.UiEvent
@@ -65,7 +64,7 @@ class DefaultScreenController(
     init {
         scope.launch {
             state.collect { snapshot ->
-                val screen = snapshot.screen
+                val screen = snapshot.remoteScreen
                 if (screen != null) {
                     if (triggerEngine == null || activeScreenId != screen.id) {
                         triggerEngine?.stop()
@@ -97,22 +96,22 @@ class DefaultScreenController(
 
     override fun onOpen() {
         store.load(screenId)
-        runLifecycle(state.value.screen?.lifecycle?.onOpen.orEmpty())
+        runLifecycle(state.value.remoteScreen?.lifecycle?.onOpen.orEmpty())
         triggerEngine?.onEvent(ScreenEventType.OnOpen)
     }
 
     override fun onAppear() {
-        runLifecycle(state.value.screen?.lifecycle?.onAppear.orEmpty())
+        runLifecycle(state.value.remoteScreen?.lifecycle?.onAppear.orEmpty())
         triggerEngine?.onEvent(ScreenEventType.OnAppear)
     }
 
     override fun onFullyVisible() {
-        runLifecycle(state.value.screen?.lifecycle?.onFullyVisible.orEmpty())
+        runLifecycle(state.value.remoteScreen?.lifecycle?.onFullyVisible.orEmpty())
         triggerEngine?.onEvent(ScreenEventType.OnFullyVisible)
     }
 
     override fun onDisappear() {
-        runLifecycle(state.value.screen?.lifecycle?.onDisappear.orEmpty())
+        runLifecycle(state.value.remoteScreen?.lifecycle?.onDisappear.orEmpty())
         triggerEngine?.onEvent(ScreenEventType.OnDisappear)
     }
 
@@ -126,13 +125,13 @@ class DefaultScreenController(
     }
 
     fun loadNextPage() {
-        val settings = state.value.screen?.settings?.pagination
+        val settings = state.value.remoteScreen?.settings?.pagination
         store.loadNextPage(settings = settings)
         triggerEngine?.onEvent(ScreenEventType.LoadNextPageCompleted)
     }
 
     fun dispatch(actionId: String) {
-        val screen = state.value.screen ?: return
+        val screen = state.value.remoteScreen ?: return
         val action = screen.actions.firstOrNull { it.id == actionId } ?: return
         scope.launch {
             actionRegistry.dispatch(
@@ -149,7 +148,7 @@ class DefaultScreenController(
     }
 
     private fun runLifecycle(events: List<UiEvent>) {
-        val screen = state.value.screen
+        val screen = state.value.remoteScreen
         if (screen == null) {
             if (events.isNotEmpty()) {
                 pendingLifecycle.value = pendingLifecycle.value + events
@@ -159,7 +158,7 @@ class DefaultScreenController(
         dispatchLifecycle(events, screen)
     }
 
-    private fun dispatchLifecycle(events: List<UiEvent>, screen: Screen) {
+    private fun dispatchLifecycle(events: List<UiEvent>, remoteScreen: RemoteScreen) {
         events.flatMap { it.actions }.forEach { action ->
             scope.launch {
                 actionRegistry.dispatch(

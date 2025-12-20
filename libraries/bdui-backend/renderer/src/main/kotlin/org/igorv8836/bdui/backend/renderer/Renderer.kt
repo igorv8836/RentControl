@@ -3,19 +3,19 @@ package org.igorv8836.bdui.backend.renderer
 import org.igorv8836.bdui.backend.core.BackendError
 import org.igorv8836.bdui.backend.core.BackendResult
 import org.igorv8836.bdui.backend.core.LimitConfig
-import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.RemoteScreen
 
 /**
  * Validate and prepare screen before serialization.
  * For now we return the screen as-is after validation; serialization can be applied by the caller.
  */
 fun render(
-    screen: Screen,
+    remoteScreen: RemoteScreen,
     limits: LimitConfig = LimitConfig(),
-): BackendResult<Screen> {
-    val issues = validateScreen(screen, limits)
+): BackendResult<RemoteScreen> {
+    val issues = validateScreen(remoteScreen, limits)
     return if (issues.isEmpty()) {
-        BackendResult.success(screen)
+        BackendResult.success(remoteScreen)
     } else {
         BackendResult.failure(
             BackendError.Validation(

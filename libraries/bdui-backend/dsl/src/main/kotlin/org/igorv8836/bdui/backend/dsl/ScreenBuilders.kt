@@ -2,12 +2,13 @@ package org.igorv8836.bdui.backend.dsl
 
 import org.igorv8836.bdui.contract.Action
 import org.igorv8836.bdui.contract.Layout
-import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.RemoteScreen
 import org.igorv8836.bdui.contract.ScreenLifecycle
 import org.igorv8836.bdui.contract.ScreenSettings
 import org.igorv8836.bdui.contract.Trigger
 import org.igorv8836.bdui.contract.UiEvent
 import org.igorv8836.bdui.contract.ExecutionContext
+import org.igorv8836.bdui.contract.Theme
 import org.igorv8836.bdui.contract.PullToRefresh
 import org.igorv8836.bdui.contract.PaginationSettings
 import org.igorv8836.bdui.contract.Scaffold
@@ -20,7 +21,7 @@ fun screen(
     id: String,
     version: Int = 1,
     block: ScreenBuilder.() -> Unit,
-): Screen {
+): RemoteScreen {
     val builder = ScreenBuilder(id = id, version = version)
     builder.block()
     return builder.build()
@@ -34,7 +35,7 @@ class ScreenBuilder(
     private var scaffold: Scaffold? = null
     private val actions: MutableList<Action> = mutableListOf()
     private val triggers: MutableList<Trigger> = mutableListOf()
-    private var theme: org.igorv8836.bdui.contract.Theme? = null
+    private var theme: Theme? = null
     private var settings: ScreenSettings = ScreenSettings()
     private var lifecycle: ScreenLifecycle = ScreenLifecycle()
     private var context: ExecutionContext = ExecutionContext()
@@ -69,7 +70,7 @@ class ScreenBuilder(
         context = value
     }
 
-    fun theme(value: org.igorv8836.bdui.contract.Theme) {
+    fun theme(value: Theme) {
         theme = value
     }
 
@@ -89,9 +90,9 @@ class ScreenBuilder(
         this.triggers += triggers
     }
 
-    fun build(): Screen {
+    fun build(): RemoteScreen {
         val actualRoot = requireNotNull(root) { "Screen root layout is required" }
-        return Screen(
+        return RemoteScreen(
             id = id,
             version = version,
             layout = Layout(root = actualRoot, scaffold = scaffold),

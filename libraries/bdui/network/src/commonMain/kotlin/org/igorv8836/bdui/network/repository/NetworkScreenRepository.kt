@@ -1,6 +1,6 @@
 package org.igorv8836.bdui.network.repository
 
-import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.RemoteScreen
 import org.igorv8836.bdui.network.datasource.RemoteScreenDataSource
 import org.igorv8836.bdui.runtime.ScreenRepository
 
@@ -14,5 +14,5 @@ class NetworkScreenRepository(
     override suspend fun fetch(
         screenId: String,
         params: Map<String, String>,
-    ): Result<Screen> = remote.fetch(screenId, params)
+    ): Result<RemoteScreen> = remote.fetch(screenId, params)
 }

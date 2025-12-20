@@ -4,17 +4,17 @@ import org.igorv8836.bdui.backend.core.BackendError
 import org.igorv8836.bdui.backend.core.BackendResult
 import org.igorv8836.bdui.backend.core.ExecutionContext
 import org.igorv8836.bdui.backend.core.ValidationIssue
-import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.RemoteScreen
 
 /**
  * Pure mapper from arbitrary input [I] to a backend-driven screen.
  * No I/O or side effects allowed inside implementations.
  */
 fun interface ScreenMapper<I> {
-    fun map(input: I, context: ExecutionContext): BackendResult<Screen>
+    fun map(input: I, context: ExecutionContext): BackendResult<RemoteScreen>
 }
 
-fun <I> ScreenMapper<I>.map(input: I): BackendResult<Screen> = map(input, ExecutionContext())
+fun <I> ScreenMapper<I>.map(input: I): BackendResult<RemoteScreen> = map(input, ExecutionContext())
 
 /**
  * Helper to produce a validation failure with issues.

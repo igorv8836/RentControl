@@ -7,7 +7,7 @@ sealed interface Action {
 data class ForwardAction(
     override val id: String,
     val path: String? = null,
-    val screen: Screen? = null,
+    val remoteScreen: RemoteScreen? = null,
     val presentation: RoutePresentation = RoutePresentation.Push,
     val parameters: Map<String, String> = emptyMap(),
 ) : Action

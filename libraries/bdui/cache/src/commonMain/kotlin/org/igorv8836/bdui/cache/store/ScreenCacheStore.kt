@@ -1,9 +1,9 @@
 package org.igorv8836.bdui.cache.store
 
-import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.RemoteScreen
 
 data class CachedScreenEntry(
-    val screen: Screen,
+    val remoteScreen: RemoteScreen,
     val expiresAtMillis: Long?,
 )
 

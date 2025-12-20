@@ -8,35 +8,35 @@ import org.igorv8836.bdui.contract.DividerElement
 import org.igorv8836.bdui.contract.LazyListElement
 import org.igorv8836.bdui.contract.ListItemElement
 import org.igorv8836.bdui.contract.Scaffold
-import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.RemoteScreen
 import org.igorv8836.bdui.contract.TextElement
 
-fun validateScreen(screen: Screen, limits: LimitConfig): List<ValidationIssue> {
+fun validateScreen(remoteScreen: RemoteScreen, limits: LimitConfig): List<ValidationIssue> {
     val issues = mutableListOf<ValidationIssue>()
 
-    if (screen.id.isBlank()) {
+    if (remoteScreen.id.isBlank()) {
         issues += ValidationIssue(path = "screen.id", message = "Screen id must not be blank", code = "blank_id")
     }
-    if (screen.version < 0) {
+    if (remoteScreen.version < 0) {
         issues += ValidationIssue(path = "screen.version", message = "Screen version must be non-negative", code = "invalid_version")
     }
-    if (screen.actions.size > limits.maxActions) {
+    if (remoteScreen.actions.size > limits.maxActions) {
         issues += ValidationIssue(
             path = "screen.actions",
-            message = "Too many actions: ${screen.actions.size} > ${limits.maxActions}",
+            message = "Too many actions: ${remoteScreen.actions.size} > ${limits.maxActions}",
             code = "actions_limit",
         )
     }
-    if (screen.triggers.size > limits.maxTriggers) {
+    if (remoteScreen.triggers.size > limits.maxTriggers) {
         issues += ValidationIssue(
             path = "screen.triggers",
-            message = "Too many triggers: ${screen.triggers.size} > ${limits.maxTriggers}",
+            message = "Too many triggers: ${remoteScreen.triggers.size} > ${limits.maxTriggers}",
             code = "triggers_limit",
         )
     }
 
     val seenIds = mutableSetOf<String>()
-    val totalNodes = traverseScreen(screen.layout.root, screen.layout.scaffold) { node, depth ->
+    val totalNodes = traverseScreen(remoteScreen.layout.root, remoteScreen.layout.scaffold) { node, depth ->
         if (!seenIds.add(node.id)) {
             issues += ValidationIssue(
                 path = "components.${node.id}",

@@ -2,6 +2,7 @@ package org.igorv8836.bdui.backend.dsl
 
 import org.igorv8836.bdui.contract.Action
 import org.igorv8836.bdui.contract.Binding
+import org.igorv8836.bdui.contract.Condition
 import org.igorv8836.bdui.contract.MissingVariableBehavior
 import org.igorv8836.bdui.contract.Trigger
 import org.igorv8836.bdui.contract.TriggerSource
@@ -47,7 +48,7 @@ fun variableChangedTrigger(
     key: String,
     scope: VariableScope = VariableScope.Global,
     actions: List<Action>,
-    condition: org.igorv8836.bdui.contract.Condition? = null,
+    condition: Condition? = null,
 ): Trigger = Trigger(
     id = id,
     source = TriggerSource.VariableChanged(key = key, scope = scope),

@@ -28,7 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.igorv8836.bdui.actions.ActionContext
 import org.igorv8836.bdui.actions.ActionRegistry
 import org.igorv8836.bdui.actions.Router
@@ -47,9 +46,8 @@ import org.igorv8836.bdui.contract.DividerElement
 import org.igorv8836.bdui.contract.ImageElement
 import org.igorv8836.bdui.contract.LazyListElement
 import org.igorv8836.bdui.contract.ListItemElement
-import org.igorv8836.bdui.contract.ScreenSettings
 import org.igorv8836.bdui.contract.SpacerElement
-import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.RemoteScreen
 import org.igorv8836.bdui.contract.TextElement
 import org.igorv8836.bdui.runtime.ScreenState
 import org.igorv8836.bdui.runtime.ScreenStatus
@@ -82,8 +80,8 @@ fun ScreenHost(
     val appeared = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     val fullyVisible = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
 
-    val dispatch = { actionId: String, screen: Screen ->
-        val action = screen.actions.firstOrNull { it.id == actionId }
+    val dispatch = { actionId: String, remoteScreen: RemoteScreen ->
+        val action = remoteScreen.actions.firstOrNull { it.id == actionId }
         if (action != null) {
             scope.launch {
                 actionRegistry.dispatch(
@@ -99,13 +97,13 @@ fun ScreenHost(
         ScreenStatus.Loading -> Loading(modifier = modifier)
         ScreenStatus.Error -> Placeholder(text = state.error ?: "Unknown error", modifier = modifier)
         ScreenStatus.Ready -> {
-            val screen = state.screen ?: return
+            val screen = state.remoteScreen ?: return
             if (state.empty) {
                 Placeholder(text = "Nothing to show", modifier = modifier)
                 return
             }
             RenderScreen(
-                screen = screen,
+                remoteScreen = screen,
                 onAction = { actionId -> dispatch(actionId, screen) },
                 resolve = resolve,
                 variables = variables,
@@ -140,7 +138,7 @@ fun ScreenHost(
 
 @Composable
 private fun RenderScreen(
-    screen: Screen,
+    remoteScreen: RemoteScreen,
     onAction: (String) -> Unit,
     resolve: (String) -> String,
     variables: VariableStore,
@@ -151,10 +149,10 @@ private fun RenderScreen(
     onRefresh: (() -> Unit)?,
     onLoadNextPage: (() -> Unit)?,
 ) {
-    val root = screen.layout.root
-    val scaffold = screen.layout.scaffold
+    val root = remoteScreen.layout.root
+    val scaffold = remoteScreen.layout.scaffold
     val hasLazyList = containsLazyList(root)
-    val resolver = remember(screen.id, variablesVersion) {
+    val resolver = remember(remoteScreen.id, variablesVersion) {
         BindingResolver(
             variables = variables,
             screenId = screenId,
@@ -165,7 +163,7 @@ private fun RenderScreen(
         .fillMaxSize()
         .padding(16.dp)
 
-    val settings = screen.settings
+    val settings = remoteScreen.settings
     val isScrollable = settings.scrollable && !hasLazyList
     val paginationConfig = settings.pagination?.takeIf { it.enabled }?.let {
         PaginationConfig(

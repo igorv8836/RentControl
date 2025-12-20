@@ -7,7 +7,7 @@ import org.igorv8836.bdui.cache.store.MemoryScreenCacheStore
 import org.igorv8836.bdui.cache.store.ScreenCacheStore
 import org.igorv8836.bdui.common.time.currentTimeMillis
 import org.igorv8836.bdui.runtime.ScreenRepository
-import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.RemoteScreen
 
 /**
  * Repository decorator that adds caching (memory/disk) with TTL.
@@ -20,7 +20,7 @@ class CachedScreenRepository(
     private val policyResolver: (screenId: String, params: Map<String, String>) -> CachePolicy = { _, _ -> defaultPolicy },
 ) : ScreenRepository {
 
-    override suspend fun fetch(screenId: String, params: Map<String, String>): Result<Screen> {
+    override suspend fun fetch(screenId: String, params: Map<String, String>): Result<RemoteScreen> {
         val policy = policyResolver(screenId, params)
         if (!policy.enabled) return delegate.fetch(screenId, params)
 
@@ -34,7 +34,7 @@ class CachedScreenRepository(
 
         val cached = store.get(key)
         if (cached != null && (cached.expiresAtMillis == null || cached.expiresAtMillis > now)) {
-            return Result.success(cached.screen)
+            return Result.success(cached.remoteScreen)
         }
 
         val fetched = delegate.fetch(screenId, params)

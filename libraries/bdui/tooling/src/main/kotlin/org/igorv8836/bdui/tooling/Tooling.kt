@@ -3,14 +3,14 @@ package org.igorv8836.bdui.tooling
 import org.igorv8836.bdui.contract.ButtonElement
 import org.igorv8836.bdui.contract.ComponentNode
 import org.igorv8836.bdui.contract.Container
-import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.RemoteScreen
 import org.igorv8836.bdui.contract.TextElement
 
 class SchemaPrinter {
-    fun describe(screen: Screen): String {
+    fun describe(remoteScreen: RemoteScreen): String {
         val builder = StringBuilder()
-        builder.appendLine("screen=${screen.id}@v${screen.version}")
-        builder.append(render(node = screen.layout.root, indent = 0))
+        builder.appendLine("screen=${remoteScreen.id}@v${remoteScreen.version}")
+        builder.append(render(node = remoteScreen.layout.root, indent = 0))
         return builder.toString()
     }
 

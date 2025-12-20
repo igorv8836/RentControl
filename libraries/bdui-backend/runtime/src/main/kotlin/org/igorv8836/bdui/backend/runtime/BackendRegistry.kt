@@ -6,9 +6,9 @@ import org.igorv8836.bdui.backend.core.ExecutionContext
 import org.igorv8836.bdui.backend.core.ValidationIssue
 import org.igorv8836.bdui.backend.data.DataProvider
 import org.igorv8836.bdui.backend.mapper.ScreenMapper
-import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.RemoteScreen
 
-typealias ScreenValidator = (Screen) -> List<ValidationIssue>
+typealias ScreenValidator = (RemoteScreen) -> List<ValidationIssue>
 
 class BackendRegistryBuilder {
     private val mappers = MutableMapperRegistry()
@@ -71,7 +71,7 @@ internal class MutableMapperRegistry {
 }
 
 fun interface MapperEntry {
-    fun map(input: Any?, context: ExecutionContext): BackendResult<Screen>
+    fun map(input: Any?, context: ExecutionContext): BackendResult<RemoteScreen>
 }
 
 internal class MutableDataProviderRegistry {

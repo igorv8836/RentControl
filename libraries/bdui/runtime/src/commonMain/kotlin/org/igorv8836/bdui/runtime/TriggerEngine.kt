@@ -17,6 +17,7 @@ import org.igorv8836.bdui.contract.Trigger
 import org.igorv8836.bdui.contract.TriggerSource
 import org.igorv8836.bdui.contract.VariableScope
 import org.igorv8836.bdui.contract.VariableValue
+import org.igorv8836.bdui.contract.Binding
 
 class TriggerEngine(
     private val screenId: String,
@@ -112,7 +113,7 @@ class TriggerEngine(
         return result
     }
 
-    private fun resolveValue(binding: org.igorv8836.bdui.contract.Binding): VariableValue? {
+    private fun resolveValue(binding: Binding): VariableValue? {
         val value = variableStore.peek(binding.key, binding.scope, screenId)
         return when {
             value != null -> value

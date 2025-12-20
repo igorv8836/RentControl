@@ -6,16 +6,16 @@ import org.igorv8836.bdui.contract.ButtonKind
 import org.igorv8836.bdui.contract.ForwardAction
 import org.igorv8836.bdui.contract.Container
 import org.igorv8836.bdui.contract.Layout
-import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.RemoteScreen
 import org.igorv8836.bdui.contract.TextElement
 import org.igorv8836.bdui.contract.ContainerDirection
 import org.igorv8836.bdui.runtime.ScreenRepository
 
 object Fixtures {
 
-    fun screenWithTextAndButton(): Screen {
+    fun screenWithTextAndButton(): RemoteScreen {
         val action = ForwardAction(id = "continue", path = "/demo/next")
-        return Screen(
+        return RemoteScreen(
             id = "demo",
             version = 1,
             layout = Layout(
@@ -39,14 +39,14 @@ object Fixtures {
 }
 
 class FakeScreenRepository(
-    private val screen: Screen = Fixtures.screenWithTextAndButton(),
+    private val remoteScreen: RemoteScreen = Fixtures.screenWithTextAndButton(),
     private val delayMs: Long = 0,
 ) : ScreenRepository {
 
-    override suspend fun fetch(screenId: String, params: Map<String, String>): Result<Screen> {
+    override suspend fun fetch(screenId: String, params: Map<String, String>): Result<RemoteScreen> {
         if (delayMs > 0) {
             delay(delayMs)
         }
-        return Result.success(screen.copy(id = screenId))
+        return Result.success(remoteScreen.copy(id = screenId))
     }
 }

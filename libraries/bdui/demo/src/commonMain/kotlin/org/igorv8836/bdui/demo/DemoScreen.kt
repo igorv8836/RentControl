@@ -29,12 +29,13 @@ import org.igorv8836.bdui.contract.Overlay
 import org.igorv8836.bdui.contract.OverlayAction
 import org.igorv8836.bdui.contract.OverlayKind
 import org.igorv8836.bdui.contract.PaginationSettings
+import org.igorv8836.bdui.contract.PullToRefresh
 import org.igorv8836.bdui.contract.Popup
 import org.igorv8836.bdui.contract.PopupAction
 import org.igorv8836.bdui.contract.Route
 import org.igorv8836.bdui.contract.RoutePresentation
 import org.igorv8836.bdui.contract.Scaffold
-import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.RemoteScreen
 import org.igorv8836.bdui.contract.ScreenLifecycle
 import org.igorv8836.bdui.contract.ScreenSettings
 import org.igorv8836.bdui.contract.SetVariableAction
@@ -45,6 +46,7 @@ import org.igorv8836.bdui.contract.UiEvent
 import org.igorv8836.bdui.contract.VariableScope
 import org.igorv8836.bdui.contract.VariableValue
 import org.igorv8836.bdui.contract.IncrementVariableAction
+import org.igorv8836.bdui.contract.StoragePolicy
 import org.igorv8836.bdui.renderer.ScreenHost
 import org.igorv8836.bdui.runtime.ScreenState
 import org.igorv8836.bdui.runtime.ScreenStatus
@@ -122,7 +124,7 @@ fun DemoScreen(
         ),
     )
 
-    val screen = Screen(
+    val remoteScreen = RemoteScreen(
         id = "demo-full",
         version = 2,
         layout = Layout(
@@ -265,7 +267,7 @@ fun DemoScreen(
         ) + detailActions,
         settings = ScreenSettings(
             scrollable = true,
-            pullToRefresh = org.igorv8836.bdui.contract.PullToRefresh(enabled = true),
+            pullToRefresh = PullToRefresh(enabled = true),
             pagination = PaginationSettings(enabled = true, pageParam = "page", prefetchDistance = 1),
         ),
         lifecycle = ScreenLifecycle(
@@ -285,7 +287,7 @@ fun DemoScreen(
     )
 
     val state = ScreenState(
-        screen = screen,
+        remoteScreen = remoteScreen,
         status = ScreenStatus.Ready,
     )
 
@@ -300,8 +302,8 @@ fun DemoScreen(
             println("Open route ${route.destination} with $parameters")
         }
 
-        override fun forward(path: String?, screen: Screen?, parameters: Map<String, String>) {
-            println("Forward to $path or embedded screen ${screen?.id} with $parameters")
+        override fun forward(path: String?, remoteScreen: RemoteScreen?, parameters: Map<String, String>) {
+            println("Forward to $path or embedded screen ${remoteScreen?.id} with $parameters")
         }
 
         override fun showPopup(popup: Popup, parameters: Map<String, String>) {
@@ -322,7 +324,7 @@ fun DemoScreen(
             value: VariableValue,
             scope: VariableScope,
             screenId: String?,
-            policy: org.igorv8836.bdui.contract.StoragePolicy,
+            policy: StoragePolicy,
             ttlMillis: Long?,
         ) {
             variables.set(key, value, scope, screenId, policy, ttlMillis)
@@ -333,7 +335,7 @@ fun DemoScreen(
             delta: Double,
             scope: VariableScope,
             screenId: String?,
-            policy: org.igorv8836.bdui.contract.StoragePolicy,
+            policy: StoragePolicy,
         ) {
             variables.increment(key, delta, scope, screenId, policy)
         }
@@ -406,7 +408,7 @@ fun DemoScreen(
             }
         },
         variableStore = variables,
-        screenId = state.screen?.id,
+        screenId = state.remoteScreen?.id,
         analytics = { event, params -> println("analytics: $event $params") },
         onRefresh = onRefresh,
         onLoadNextPage = { println("load next page request") },

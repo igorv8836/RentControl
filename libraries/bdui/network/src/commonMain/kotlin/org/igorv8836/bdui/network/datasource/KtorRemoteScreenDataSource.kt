@@ -8,7 +8,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.appendPathSegments
 import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
-import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.RemoteScreen
 import org.igorv8836.bdui.network.client.createHttpClient
 import org.igorv8836.bdui.network.config.NetworkConfig
 import org.igorv8836.bdui.network.errors.ScreenNetworkException
@@ -20,14 +20,14 @@ import org.igorv8836.bdui.network.errors.ScreenRemoteException
  */
 class KtorRemoteScreenDataSource(
     private val config: NetworkConfig,
-    private val decode: suspend (String) -> Screen,
+    private val decode: suspend (String) -> RemoteScreen,
     client: HttpClient? = null,
     private val logger: (String) -> Unit = {},
 ) : RemoteScreenDataSource {
 
     private val httpClient: HttpClient = client ?: createHttpClient(config, logger)
 
-    override suspend fun fetch(screenId: String, params: Map<String, String>): Result<Screen> = runCatching {
+    override suspend fun fetch(screenId: String, params: Map<String, String>): Result<RemoteScreen> = runCatching {
         val response = httpClient.get {
             url {
                 takeFrom(config.baseUrl)

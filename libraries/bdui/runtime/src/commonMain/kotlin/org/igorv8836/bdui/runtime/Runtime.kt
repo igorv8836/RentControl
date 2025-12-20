@@ -7,10 +7,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.igorv8836.bdui.contract.Container
 import org.igorv8836.bdui.contract.LazyListElement
-import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.RemoteScreen
+import org.igorv8836.bdui.contract.ComponentNode
+import org.igorv8836.bdui.contract.PaginationSettings
 
 data class ScreenState(
-    val screen: Screen? = null,
+    val remoteScreen: RemoteScreen? = null,
     val status: ScreenStatus = ScreenStatus.Idle,
     val error: String? = null,
     val refreshing: Boolean = false,
@@ -30,7 +32,7 @@ interface ScreenRepository {
     suspend fun fetch(
         screenId: String,
         params: Map<String, String> = emptyMap(),
-    ): Result<Screen>
+    ): Result<RemoteScreen>
 }
 
 data class PaginationState(
@@ -53,7 +55,7 @@ class ScreenStore(
             stateInternal.value = result.fold(
                 onSuccess = { fetched ->
                     ScreenState(
-                        screen = fetched,
+                        remoteScreen = fetched,
                         status = ScreenStatus.Ready,
                         empty = isScreenEmpty(fetched),
                         pagination = PaginationState(),
@@ -66,7 +68,7 @@ class ScreenStore(
         }
     }
 
-    fun refresh(screenId: String? = stateInternal.value.screen?.id, params: Map<String, String> = emptyMap()) {
+    fun refresh(screenId: String? = stateInternal.value.remoteScreen?.id, params: Map<String, String> = emptyMap()) {
         val id = screenId ?: return
         stateInternal.update { it.copy(refreshing = true, error = null, pagination = PaginationState()) }
         scope.launch {
@@ -75,7 +77,7 @@ class ScreenStore(
                 result.fold(
                     onSuccess = { fetched ->
                         prev.copy(
-                            screen = fetched,
+                            remoteScreen = fetched,
                             status = ScreenStatus.Ready,
                             refreshing = false,
                             empty = isScreenEmpty(fetched),
@@ -96,10 +98,10 @@ class ScreenStore(
 
     fun loadNextPage(
         params: Map<String, String> = emptyMap(),
-        settings: org.igorv8836.bdui.contract.PaginationSettings? = null,
+        settings: PaginationSettings? = null,
     ) {
         val snapshot = stateInternal.value
-        val screen = snapshot.screen ?: return
+        val screen = snapshot.remoteScreen ?: return
         if (!snapshot.pagination.hasMore || snapshot.loadingMore) return
         val nextPage = snapshot.pagination.page + 1
         val mergedParams = params.toMutableMap()
@@ -115,10 +117,10 @@ class ScreenStore(
             stateInternal.update { prev ->
                 result.fold(
                     onSuccess = { fetched ->
-                        val merged = mergeForPagination(prev.screen, fetched)
+                        val merged = mergeForPagination(prev.remoteScreen, fetched)
                         val newEmpty = isScreenEmpty(merged)
                         prev.copy(
-                            screen = merged,
+                            remoteScreen = merged,
                             loadingMore = false,
                             empty = newEmpty,
                             pagination = prev.pagination.copy(
@@ -139,14 +141,14 @@ class ScreenStore(
         }
     }
 
-    private fun isScreenEmpty(screen: Screen): Boolean =
-        when (val root = screen.layout.root) {
+    private fun isScreenEmpty(remoteScreen: RemoteScreen): Boolean =
+        when (val root = remoteScreen.layout.root) {
             is LazyListElement -> root.items.isEmpty()
             is Container -> root.children.all { child -> child is LazyListElement && child.items.isEmpty() }
             else -> false
         }
 
-    private fun mergeForPagination(existing: Screen?, incoming: Screen): Screen {
+    private fun mergeForPagination(existing: RemoteScreen?, incoming: RemoteScreen): RemoteScreen {
         if (existing == null) return incoming
         val mergedRoot = mergeNode(existing.layout.root, incoming.layout.root)
         val mergedLayout = existing.layout.copy(
@@ -156,7 +158,7 @@ class ScreenStore(
         return existing.copy(layout = mergedLayout)
     }
 
-    private fun mergeNode(current: org.igorv8836.bdui.contract.ComponentNode, incoming: org.igorv8836.bdui.contract.ComponentNode): org.igorv8836.bdui.contract.ComponentNode =
+    private fun mergeNode(current: ComponentNode, incoming: ComponentNode): ComponentNode =
         when {
             current is LazyListElement && incoming is LazyListElement && current.id == incoming.id -> {
                 current.copy(items = current.items + incoming.items)

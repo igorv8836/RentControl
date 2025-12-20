@@ -10,14 +10,14 @@ import org.igorv8836.bdui.contract.OverlayAction
 import org.igorv8836.bdui.contract.Popup
 import org.igorv8836.bdui.contract.PopupAction
 import org.igorv8836.bdui.contract.Route
-import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.RemoteScreen
 import org.igorv8836.bdui.contract.RemoveVariableAction
 import org.igorv8836.bdui.contract.SetVariableAction
 import org.igorv8836.bdui.contract.SubmitAction
 
 interface Navigator {
     fun openRoute(route: Route, parameters: Map<String, String> = emptyMap())
-    fun forward(path: String? = null, screen: Screen? = null, parameters: Map<String, String> = emptyMap())
+    fun forward(path: String? = null, remoteScreen: RemoteScreen? = null, parameters: Map<String, String> = emptyMap())
     fun showPopup(popup: Popup, parameters: Map<String, String> = emptyMap())
     fun showOverlay(overlay: Overlay, parameters: Map<String, String> = emptyMap())
 }
@@ -53,7 +53,7 @@ class ActionExecutor(
         when (action) {
             is ForwardAction -> {
                 validator.validateForwardPath(action.path).getOrThrow()
-                navigator.forward(path = action.path, screen = action.screen, parameters = action.parameters)
+                navigator.forward(path = action.path, remoteScreen = action.remoteScreen, parameters = action.parameters)
             }
 
             is PopupAction -> {
