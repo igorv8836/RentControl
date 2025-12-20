@@ -1,39 +1,28 @@
 package org.igorv8836.bdui.contract
 
-import kotlinx.serialization.Serializable
-
-@Serializable
 enum class VariableScope {
     Global,
     Screen,
 }
 
-@Serializable
 enum class StoragePolicy {
     InMemory,
     Persistent,
 }
 
-@Serializable
 sealed interface VariableValue {
-    @Serializable
     data class StringValue(val value: String) : VariableValue
-    @Serializable
     data class NumberValue(val value: Double) : VariableValue
-    @Serializable
     data class BoolValue(val value: Boolean) : VariableValue
-    @Serializable
     data class ObjectValue(val value: Map<String, VariableValue>) : VariableValue
 }
 
-@Serializable
 enum class MissingVariableBehavior {
     Empty,
     Default,
     Error,
 }
 
-@Serializable
 data class Binding(
     val key: String,
     val scope: VariableScope = VariableScope.Global,
@@ -41,7 +30,6 @@ data class Binding(
     val missingBehavior: MissingVariableBehavior = MissingVariableBehavior.Empty,
 )
 
-@Serializable
 data class Condition(
     val binding: Binding,
     val equals: VariableValue? = null,

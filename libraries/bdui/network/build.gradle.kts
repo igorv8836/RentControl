@@ -21,6 +21,7 @@ kotlin {
             api(projects.libraries.bdui.cache)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.logging)
+            implementation(libs.kotlinx.serialization.json)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

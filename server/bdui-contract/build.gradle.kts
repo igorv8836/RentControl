@@ -7,7 +7,5 @@ kotlin {
 }
 
 dependencies {
-    implementation(projects.libraries.bduiBackend.core)
-    implementation(projects.server.bduiContract)
     testImplementation(libs.kotlin.test)
 }

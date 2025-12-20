@@ -1,8 +1,5 @@
 package org.igorv8836.bdui.contract
 
-import kotlinx.serialization.Serializable
-
-@Serializable
 data class Trigger(
     val id: String,
     val source: TriggerSource,
@@ -13,20 +10,16 @@ data class Trigger(
     val maxExecutions: Int = 10,
 )
 
-@Serializable
 sealed interface TriggerSource {
-    @Serializable
     data class VariableChanged(
         val key: String,
         val scope: VariableScope = VariableScope.Global,
         val screenId: String? = null,
     ) : TriggerSource
 
-    @Serializable
     data class ScreenEvent(val type: ScreenEventType) : TriggerSource
 }
 
-@Serializable
 enum class ScreenEventType {
     OnOpen,
     OnAppear,

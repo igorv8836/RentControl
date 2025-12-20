@@ -14,10 +14,10 @@ import org.igorv8836.bdui.contract.PaginationSettings
 import org.igorv8836.bdui.contract.PullToRefresh
 import org.igorv8836.bdui.contract.VariableScope
 import org.igorv8836.bdui.contract.VariableValue
-import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.RemoteScreen
 import org.igorv8836.rentcontrol.backend.model.OfferDto
 
-fun buildHomeScreen(offers: List<OfferDto>): Screen = screen(id = "home", version = 1) {
+fun buildHomeScreen(offers: List<OfferDto>): RemoteScreen = screen(id = "home", version = 1) {
     settings(
         scrollable = true,
         pullToRefresh = PullToRefresh(enabled = true),

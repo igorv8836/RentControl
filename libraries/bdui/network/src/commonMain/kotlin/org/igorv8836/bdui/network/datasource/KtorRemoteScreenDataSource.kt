@@ -8,6 +8,8 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.appendPathSegments
 import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import org.igorv8836.bdui.contract.RemoteScreen
 import org.igorv8836.bdui.network.client.createHttpClient
 import org.igorv8836.bdui.network.config.NetworkConfig
@@ -20,7 +22,10 @@ import org.igorv8836.bdui.network.errors.ScreenRemoteException
  */
 class KtorRemoteScreenDataSource(
     private val config: NetworkConfig,
-    private val decode: suspend (String) -> RemoteScreen,
+    private val json: Json = Json { ignoreUnknownKeys = true },
+    private val decode: suspend (String) -> RemoteScreen = { body ->
+        json.decodeFromString(RemoteScreen.serializer(), body)
+    },
     client: HttpClient? = null,
     private val logger: (String) -> Unit = {},
 ) : RemoteScreenDataSource {

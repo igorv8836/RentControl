@@ -1,13 +1,9 @@
 package org.igorv8836.bdui.contract
 
-import kotlinx.serialization.Serializable
-
-@Serializable
 sealed interface Action {
     val id: String
 }
 
-@Serializable
 data class ForwardAction(
     override val id: String,
     val path: String? = null,
@@ -16,40 +12,34 @@ data class ForwardAction(
     val parameters: Map<String, String> = emptyMap(),
 ) : Action
 
-@Serializable
 data class OverlayAction(
     override val id: String,
     val overlay: Overlay,
     val parameters: Map<String, String> = emptyMap(),
 ) : Action
 
-@Serializable
 data class PopupAction(
     override val id: String,
     val popup: Popup,
     val parameters: Map<String, String> = emptyMap(),
 ) : Action
 
-@Serializable
 data class SubmitAction(
     override val id: String,
     val payload: Map<String, String> = emptyMap(),
 ) : Action
 
-@Serializable
 data class AnalyticsAction(
     override val id: String,
     val analytics: Analytics,
 ) : Action
 
-@Serializable
 data class CustomAction(
     override val id: String,
     val name: String,
     val parameters: Map<String, String> = emptyMap(),
 ) : Action
 
-@Serializable
 data class SetVariableAction(
     override val id: String,
     val key: String,
@@ -60,7 +50,6 @@ data class SetVariableAction(
     val screenId: String? = null,
 ) : Action
 
-@Serializable
 data class IncrementVariableAction(
     override val id: String,
     val key: String,
@@ -70,7 +59,6 @@ data class IncrementVariableAction(
     val screenId: String? = null,
 ) : Action
 
-@Serializable
 data class RemoveVariableAction(
     override val id: String,
     val key: String,

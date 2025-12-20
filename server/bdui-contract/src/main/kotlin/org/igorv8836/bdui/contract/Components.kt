@@ -1,13 +1,9 @@
 package org.igorv8836.bdui.contract
 
-import kotlinx.serialization.Serializable
-
-@Serializable
 sealed interface ComponentNode {
     val id: String
 }
 
-@Serializable
 data class Container(
     override val id: String,
     val direction: ContainerDirection,
@@ -16,14 +12,12 @@ data class Container(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@Serializable
 enum class ContainerDirection {
     Column,
     Row,
     Overlay,
 }
 
-@Serializable
 data class TextElement(
     override val id: String,
     val textKey: String,
@@ -34,7 +28,6 @@ data class TextElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@Serializable
 enum class TextStyle {
     Title,
     Subtitle,
@@ -42,7 +35,6 @@ enum class TextStyle {
     Caption,
 }
 
-@Serializable
 data class ButtonElement(
     override val id: String,
     val titleKey: String,
@@ -55,14 +47,12 @@ data class ButtonElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@Serializable
 enum class ButtonKind {
     Primary,
     Secondary,
     Ghost,
 }
 
-@Serializable
 data class ImageElement(
     override val id: String,
     val url: String,
@@ -70,7 +60,6 @@ data class ImageElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@Serializable
 data class LazyListElement(
     override val id: String,
     val items: List<ComponentNode>,
@@ -78,7 +67,6 @@ data class LazyListElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@Serializable
 data class SpacerElement(
     override val id: String,
     val width: Float? = null,
@@ -86,7 +74,6 @@ data class SpacerElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@Serializable
 data class DividerElement(
     override val id: String,
     val thickness: Float? = null,
@@ -95,7 +82,6 @@ data class DividerElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@Serializable
 data class ListItemElement(
     override val id: String,
     val titleKey: String,

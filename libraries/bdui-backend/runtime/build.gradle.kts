@@ -12,6 +12,6 @@ dependencies {
     implementation(projects.libraries.bduiBackend.renderer)
     implementation(projects.libraries.bduiBackend.data)
     implementation(projects.libraries.bduiBackend.dsl)
-    implementation(projects.libraries.bdui.contract)
+    implementation(projects.server.bduiContract)
     testImplementation(libs.kotlin.test)
 }

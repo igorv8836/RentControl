@@ -56,4 +56,5 @@ include(
     ":libraries:bdui:cache",
     ":libraries:bdui:network",
     ":libraries:bdui:demo",
+    ":server:bdui-contract",
 )
