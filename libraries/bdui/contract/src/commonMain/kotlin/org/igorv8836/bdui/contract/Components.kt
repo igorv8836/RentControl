@@ -57,3 +57,24 @@ data class LazyListElement(
     val items: List<ComponentNode>,
     val placeholderCount: Int = 0,
 ) : ComponentNode
+
+data class SpacerElement(
+    override val id: String,
+    val width: Float? = null,
+    val height: Float? = null,
+) : ComponentNode
+
+data class DividerElement(
+    override val id: String,
+    val thickness: Float? = null,
+    val color: String? = null,
+    val insetStart: Float? = null,
+) : ComponentNode
+
+data class ListItemElement(
+    override val id: String,
+    val titleKey: String,
+    val subtitleKey: String? = null,
+    val actionId: String? = null,
+    val semantics: Semantics? = null,
+) : ComponentNode
