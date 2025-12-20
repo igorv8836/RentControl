@@ -48,6 +48,7 @@ include(
     ":libraries:bdui:common",
     ":libraries:bdui-backend:core",
     ":libraries:bdui-backend:dsl",
+    ":libraries:bdui-backend:mapper",
     ":libraries:bdui:tooling",
     ":libraries:bdui:cache",
     ":libraries:bdui:network",
