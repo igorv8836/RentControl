@@ -5,7 +5,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.igorv8836.bdui.actions.ActionHandler
 import org.igorv8836.bdui.actions.ActionContext
@@ -15,6 +14,7 @@ import org.igorv8836.bdui.actions.Navigator
 import org.igorv8836.bdui.actions.Router
 import org.igorv8836.bdui.actions.VariableAdapter
 import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.ScreenEventType
 import org.igorv8836.bdui.contract.StoragePolicy
 import org.igorv8836.bdui.contract.UiEvent
 import org.igorv8836.bdui.contract.VariableScope
@@ -56,18 +56,41 @@ class DefaultScreenController(
         executor = executor,
     )
     private val pendingLifecycle = MutableStateFlow(emptyList<UiEvent>())
+    private var triggerEngine: TriggerEngine? = null
+    private var activeScreenId: String? = null
+    private var previousState: ScreenState? = null
 
     override val state: StateFlow<ScreenState> = store.state
 
     init {
         scope.launch {
-            state.collectLatest { snapshot ->
+            state.collect { snapshot ->
                 val screen = snapshot.screen
-                if (screen != null && pendingLifecycle.value.isNotEmpty()) {
-                    val events = pendingLifecycle.value
-                    pendingLifecycle.value = emptyList()
-                    dispatchLifecycle(events, screen)
+                if (screen != null) {
+                    if (triggerEngine == null || activeScreenId != screen.id) {
+                        triggerEngine?.stop()
+                        triggerEngine = TriggerEngine(
+                            screenId = screen.id,
+                            variableStore = variableStore,
+                            variableAdapter = variableAdapter,
+                            actionRegistry = actionRegistry,
+                            router = router,
+                            analytics = analytics,
+                            navigator = navigator,
+                            externalScope = scope,
+                        ).also { engine ->
+                            engine.start(screen.triggers)
+                        }
+                        activeScreenId = screen.id
+                    }
+                    if (pendingLifecycle.value.isNotEmpty()) {
+                        val events = pendingLifecycle.value
+                        pendingLifecycle.value = emptyList()
+                        dispatchLifecycle(events, screen)
+                    }
                 }
+                trackScreenEvents(previousState, snapshot)
+                previousState = snapshot
             }
         }
     }
@@ -75,22 +98,27 @@ class DefaultScreenController(
     override fun onOpen() {
         store.load(screenId)
         runLifecycle(state.value.screen?.lifecycle?.onOpen.orEmpty())
+        triggerEngine?.onEvent(ScreenEventType.OnOpen)
     }
 
     override fun onAppear() {
         runLifecycle(state.value.screen?.lifecycle?.onAppear.orEmpty())
+        triggerEngine?.onEvent(ScreenEventType.OnAppear)
     }
 
     override fun onFullyVisible() {
         runLifecycle(state.value.screen?.lifecycle?.onFullyVisible.orEmpty())
+        triggerEngine?.onEvent(ScreenEventType.OnFullyVisible)
     }
 
     override fun onDisappear() {
         runLifecycle(state.value.screen?.lifecycle?.onDisappear.orEmpty())
+        triggerEngine?.onEvent(ScreenEventType.OnDisappear)
     }
 
     override fun dispose() {
         job.cancel()
+        triggerEngine?.stop()
     }
 
     fun refresh(params: Map<String, String> = emptyMap()) {
@@ -101,6 +129,7 @@ class DefaultScreenController(
         // Placeholder for pagination effect; repo can be extended to support pagination params.
         store.setLoadingMore(true)
         store.setLoadingMore(false)
+        triggerEngine?.onEvent(ScreenEventType.LoadNextPageCompleted)
     }
 
     fun dispatch(actionId: String) {
@@ -145,6 +174,12 @@ class DefaultScreenController(
                     ),
                 )
             }
+        }
+    }
+
+    private fun trackScreenEvents(previous: ScreenState?, current: ScreenState) {
+        if (previous?.refreshing == true && current.refreshing == false) {
+            triggerEngine?.onEvent(ScreenEventType.RefreshCompleted)
         }
     }
 }

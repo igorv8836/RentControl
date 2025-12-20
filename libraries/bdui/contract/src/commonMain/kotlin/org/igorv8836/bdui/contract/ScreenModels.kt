@@ -5,6 +5,7 @@ data class Screen(
     val version: Int,
     val layout: Layout,
     val actions: List<Action> = emptyList(),
+    val triggers: List<Trigger> = emptyList(),
     val theme: Theme? = null,
     val settings: ScreenSettings = ScreenSettings(),
     val lifecycle: ScreenLifecycle = ScreenLifecycle(),
