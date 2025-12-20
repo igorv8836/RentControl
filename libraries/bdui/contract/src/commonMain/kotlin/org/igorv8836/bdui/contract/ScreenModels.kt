@@ -14,6 +14,12 @@ data class Screen(
 
 data class Layout(
     val root: ComponentNode,
+    val scaffold: Scaffold? = null,
+)
+
+data class Scaffold(
+    val top: ComponentNode? = null,
+    val bottom: ComponentNode? = null,
 )
 
 data class Theme(

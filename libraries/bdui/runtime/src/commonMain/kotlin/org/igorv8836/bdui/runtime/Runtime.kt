@@ -149,7 +149,11 @@ class ScreenStore(
     private fun mergeForPagination(existing: Screen?, incoming: Screen): Screen {
         if (existing == null) return incoming
         val mergedRoot = mergeNode(existing.layout.root, incoming.layout.root)
-        return existing.copy(layout = existing.layout.copy(root = mergedRoot))
+        val mergedLayout = existing.layout.copy(
+            root = mergedRoot,
+            scaffold = incoming.layout.scaffold ?: existing.layout.scaffold,
+        )
+        return existing.copy(layout = mergedLayout)
     }
 
     private fun mergeNode(current: org.igorv8836.bdui.contract.ComponentNode, incoming: org.igorv8836.bdui.contract.ComponentNode): org.igorv8836.bdui.contract.ComponentNode =

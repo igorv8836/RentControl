@@ -152,6 +152,7 @@ private fun RenderScreen(
     onLoadNextPage: (() -> Unit)?,
 ) {
     val root = screen.layout.root
+    val scaffold = screen.layout.scaffold
     val hasLazyList = containsLazyList(root)
     val resolver = remember(screen.id, variablesVersion) {
         BindingResolver(
@@ -187,14 +188,37 @@ private fun RenderScreen(
 
     val content: @Composable BoxScope.() -> Unit = {
         if (hasLazyList) {
-            Box(modifier = contentModifier) {
-                RenderNode(
-                    node = root,
-                    onAction = onAction,
-                    resolver = resolver,
-                    modifier = Modifier.fillMaxWidth(),
-                    pagination = paginationConfig,
-                )
+            Column(modifier = contentModifier) {
+                scaffold?.top?.let {
+                    RenderNode(
+                        node = it,
+                        onAction = onAction,
+                        resolver = resolver,
+                        modifier = Modifier.fillMaxWidth(),
+                        pagination = paginationConfig,
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                ) {
+                    RenderNode(
+                        node = root,
+                        onAction = onAction,
+                        resolver = resolver,
+                        modifier = Modifier.fillMaxWidth(),
+                        pagination = paginationConfig,
+                    )
+                }
+                scaffold?.bottom?.let {
+                    RenderNode(
+                        node = it,
+                        onAction = onAction,
+                        resolver = resolver,
+                        modifier = Modifier.fillMaxWidth(),
+                        pagination = paginationConfig,
+                    )
+                }
             }
         } else {
             val scrollState = rememberScrollState()
@@ -211,6 +235,15 @@ private fun RenderScreen(
             Column(
                 modifier = scrollModifier,
             ) {
+                scaffold?.top?.let {
+                    RenderNode(
+                        node = it,
+                        onAction = onAction,
+                        resolver = resolver,
+                        modifier = Modifier.fillMaxWidth(),
+                        pagination = paginationConfig,
+                    )
+                }
                 RenderNode(
                     node = root,
                     onAction = onAction,
@@ -218,6 +251,15 @@ private fun RenderScreen(
                     modifier = Modifier.fillMaxWidth(),
                     pagination = paginationConfig,
                 )
+                scaffold?.bottom?.let {
+                    RenderNode(
+                        node = it,
+                        onAction = onAction,
+                        resolver = resolver,
+                        modifier = Modifier.fillMaxWidth(),
+                        pagination = paginationConfig,
+                    )
+                }
             }
         }
 
