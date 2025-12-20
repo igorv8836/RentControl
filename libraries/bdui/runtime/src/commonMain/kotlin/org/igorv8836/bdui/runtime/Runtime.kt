@@ -68,6 +68,15 @@ class ScreenStore(
         }
     }
 
+    fun show(remoteScreen: RemoteScreen) {
+        stateInternal.value = ScreenState(
+            remoteScreen = remoteScreen,
+            status = ScreenStatus.Ready,
+            empty = isScreenEmpty(remoteScreen),
+            pagination = PaginationState(),
+        )
+    }
+
     fun refresh(screenId: String? = stateInternal.value.remoteScreen?.id, params: Map<String, String> = emptyMap()) {
         val id = screenId ?: return
         stateInternal.update { it.copy(refreshing = true, error = null, pagination = PaginationState()) }

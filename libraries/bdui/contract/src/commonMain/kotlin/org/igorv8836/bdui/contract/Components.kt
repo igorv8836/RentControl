@@ -1,5 +1,6 @@
 package org.igorv8836.bdui.contract
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -8,6 +9,7 @@ sealed interface ComponentNode {
 }
 
 @Serializable
+@SerialName("container")
 data class Container(
     override val id: String,
     val direction: ContainerDirection,
@@ -24,6 +26,7 @@ enum class ContainerDirection {
 }
 
 @Serializable
+@SerialName("text")
 data class TextElement(
     override val id: String,
     val textKey: String,
@@ -43,6 +46,7 @@ enum class TextStyle {
 }
 
 @Serializable
+@SerialName("button")
 data class ButtonElement(
     override val id: String,
     val titleKey: String,
@@ -63,6 +67,7 @@ enum class ButtonKind {
 }
 
 @Serializable
+@SerialName("image")
 data class ImageElement(
     override val id: String,
     val url: String,
@@ -71,6 +76,7 @@ data class ImageElement(
 ) : ComponentNode
 
 @Serializable
+@SerialName("lazyList")
 data class LazyListElement(
     override val id: String,
     val items: List<ComponentNode>,
@@ -79,6 +85,7 @@ data class LazyListElement(
 ) : ComponentNode
 
 @Serializable
+@SerialName("spacer")
 data class SpacerElement(
     override val id: String,
     val width: Float? = null,
@@ -87,6 +94,7 @@ data class SpacerElement(
 ) : ComponentNode
 
 @Serializable
+@SerialName("divider")
 data class DividerElement(
     override val id: String,
     val thickness: Float? = null,
@@ -96,6 +104,7 @@ data class DividerElement(
 ) : ComponentNode
 
 @Serializable
+@SerialName("listItem")
 data class ListItemElement(
     override val id: String,
     val titleKey: String,

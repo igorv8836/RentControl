@@ -1,5 +1,6 @@
 package org.igorv8836.bdui.contract
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -8,6 +9,7 @@ sealed interface Action {
 }
 
 @Serializable
+@SerialName("forward")
 data class ForwardAction(
     override val id: String,
     val path: String? = null,
@@ -17,6 +19,7 @@ data class ForwardAction(
 ) : Action
 
 @Serializable
+@SerialName("overlay")
 data class OverlayAction(
     override val id: String,
     val overlay: Overlay,
@@ -24,6 +27,7 @@ data class OverlayAction(
 ) : Action
 
 @Serializable
+@SerialName("popup")
 data class PopupAction(
     override val id: String,
     val popup: Popup,
@@ -31,18 +35,21 @@ data class PopupAction(
 ) : Action
 
 @Serializable
+@SerialName("submit")
 data class SubmitAction(
     override val id: String,
     val payload: Map<String, String> = emptyMap(),
 ) : Action
 
 @Serializable
+@SerialName("analytics")
 data class AnalyticsAction(
     override val id: String,
     val analytics: Analytics,
 ) : Action
 
 @Serializable
+@SerialName("custom")
 data class CustomAction(
     override val id: String,
     val name: String,
@@ -50,6 +57,7 @@ data class CustomAction(
 ) : Action
 
 @Serializable
+@SerialName("setVariable")
 data class SetVariableAction(
     override val id: String,
     val key: String,
@@ -61,6 +69,7 @@ data class SetVariableAction(
 ) : Action
 
 @Serializable
+@SerialName("incrementVariable")
 data class IncrementVariableAction(
     override val id: String,
     val key: String,
@@ -71,6 +80,7 @@ data class IncrementVariableAction(
 ) : Action
 
 @Serializable
+@SerialName("removeVariable")
 data class RemoveVariableAction(
     override val id: String,
     val key: String,

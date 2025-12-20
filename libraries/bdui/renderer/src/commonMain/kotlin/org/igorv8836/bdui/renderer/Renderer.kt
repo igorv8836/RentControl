@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import org.igorv8836.bdui.actions.VariableAdapter
 import org.igorv8836.bdui.actions.ActionContext
 import org.igorv8836.bdui.actions.ActionRegistry
 import org.igorv8836.bdui.actions.Router
@@ -57,6 +58,7 @@ import org.igorv8836.bdui.contract.Condition
 import org.igorv8836.bdui.contract.MissingVariableBehavior
 import org.igorv8836.bdui.contract.VariableScope
 import org.igorv8836.bdui.contract.VariableValue
+import org.igorv8836.bdui.contract.StoragePolicy
 
 @Composable
 fun ScreenHost(
@@ -80,13 +82,50 @@ fun ScreenHost(
     val appeared = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     val fullyVisible = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
 
+    val variableAdapter = remember(variables) {
+        object : VariableAdapter {
+            override fun peek(key: String, scope: VariableScope, screenId: String?): VariableValue? =
+                variables.peek(key, scope, screenId)
+
+            override suspend fun set(
+                key: String,
+                value: VariableValue,
+                scope: VariableScope,
+                screenId: String?,
+                policy: StoragePolicy,
+                ttlMillis: Long?,
+            ) {
+                variables.set(key, value, scope, screenId, policy, ttlMillis)
+            }
+
+            override suspend fun increment(
+                key: String,
+                delta: Double,
+                scope: VariableScope,
+                screenId: String?,
+                policy: StoragePolicy,
+            ) {
+                variables.increment(key, delta, scope, screenId, policy)
+            }
+
+            override suspend fun remove(key: String, scope: VariableScope, screenId: String?) {
+                variables.remove(key, scope, screenId)
+            }
+        }
+    }
+
     val dispatch = { actionId: String, remoteScreen: RemoteScreen ->
         val action = remoteScreen.actions.firstOrNull { it.id == actionId }
         if (action != null) {
             scope.launch {
                 actionRegistry.dispatch(
                     action = action,
-                    context = ActionContext(router = router, analytics = analytics),
+                    context = ActionContext(
+                        router = router,
+                        analytics = analytics,
+                        variables = variableAdapter,
+                        screenId = screenId,
+                    ),
                 )
             }
         }
