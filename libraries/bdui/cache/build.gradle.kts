@@ -17,28 +17,19 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            api(projects.libraries.bdui.common)
             api(projects.libraries.bdui.runtime)
-            api(projects.libraries.bdui.cache)
-            implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.logging)
+            api(projects.libraries.bdui.contract)
+            implementation(libs.kotlinx.coroutines.core)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
-        }
-        androidMain.dependencies {
-            implementation(libs.ktor.client.okhttp)
-        }
-        iosMain.dependencies {
-            implementation(libs.ktor.client.darwin)
-        }
-        jvmMain.dependencies {
-            implementation(libs.ktor.client.java)
         }
     }
 }
 
 android {
-    namespace = "org.igorv8836.bdui.network"
+    namespace = "org.igorv8836.bdui.cache"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()

@@ -12,6 +12,7 @@ import org.igorv8836.bdui.actions.ActionRegistry
 import org.igorv8836.bdui.actions.Navigator
 import org.igorv8836.bdui.actions.Router
 import org.igorv8836.bdui.actions.VariableAdapter
+import org.igorv8836.bdui.cache.config.CachePolicy
 import org.igorv8836.bdui.contract.Binding
 import org.igorv8836.bdui.contract.ButtonElement
 import org.igorv8836.bdui.contract.ButtonKind
@@ -55,6 +56,8 @@ fun DemoScreen(
 ) {
     val scope = rememberCoroutineScope()
     val variables = remember { VariableStore(scope = scope) }
+    // demo: show cache policy usage (library dependency)
+    val cachePolicy = remember { CachePolicy(enabled = true, ttlMillis = 60_000) }
 
     LaunchedEffect(Unit) {
         variables.set(

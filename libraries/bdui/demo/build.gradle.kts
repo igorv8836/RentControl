@@ -25,6 +25,8 @@ kotlin {
             implementation(projects.libraries.bdui.contract)
             implementation(projects.libraries.bdui.runtime)
             implementation(projects.libraries.bdui.actions)
+            implementation(projects.libraries.bdui.network)
+            implementation(projects.libraries.bdui.cache)
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)

@@ -45,7 +45,9 @@ include(
     ":libraries:bdui:platform-android",
     ":libraries:bdui:platform-ios",
     ":libraries:bdui:testing",
+    ":libraries:bdui:common",
     ":libraries:bdui:tooling",
+    ":libraries:bdui:cache",
     ":libraries:bdui:network",
     ":libraries:bdui:demo",
 )

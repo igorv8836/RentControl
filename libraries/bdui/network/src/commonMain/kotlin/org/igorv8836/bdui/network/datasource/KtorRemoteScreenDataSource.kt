@@ -7,6 +7,7 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.appendPathSegments
 import io.ktor.http.isSuccess
+import io.ktor.http.takeFrom
 import org.igorv8836.bdui.contract.Screen
 import org.igorv8836.bdui.network.client.createHttpClient
 import org.igorv8836.bdui.network.config.NetworkConfig

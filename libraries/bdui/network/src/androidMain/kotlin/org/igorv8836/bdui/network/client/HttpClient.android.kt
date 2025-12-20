@@ -9,7 +9,7 @@ import io.ktor.client.plugins.logging.Logging
 import okhttp3.OkHttpClient
 import org.igorv8836.bdui.network.config.NetworkConfig
 
-internal actual fun createHttpClient(config: NetworkConfig, logger: (String) -> Unit): HttpClient =
+internal actual fun createHttpClient(config: NetworkConfig, logWriter: (String) -> Unit): HttpClient =
     HttpClient(OkHttp) {
         engine {
             preconfigured = OkHttpClient.Builder().build()
@@ -21,11 +21,11 @@ internal actual fun createHttpClient(config: NetworkConfig, logger: (String) -> 
         }
         install(Logging) {
             level = LogLevel.INFO
-            logger(object : Logger {
+            logger = object : Logger {
                 override fun log(message: String) {
-                    logger(message)
+                    logWriter(message)
                 }
-            })
+            }
         }
         expectSuccess = false
     }

@@ -8,7 +8,7 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import org.igorv8836.bdui.network.config.NetworkConfig
 
-internal actual fun createHttpClient(config: NetworkConfig, logger: (String) -> Unit): HttpClient =
+internal actual fun createHttpClient(config: NetworkConfig, logWriter: (String) -> Unit): HttpClient =
     HttpClient(Java) {
         install(HttpTimeout) {
             requestTimeoutMillis = config.requestTimeoutMillis
@@ -17,11 +17,11 @@ internal actual fun createHttpClient(config: NetworkConfig, logger: (String) -> 
         }
         install(Logging) {
             level = LogLevel.INFO
-            logger(object : Logger {
+            logger = object : Logger {
                 override fun log(message: String) {
-                    logger(message)
+                    logWriter(message)
                 }
-            })
+            }
         }
         expectSuccess = false
     }
