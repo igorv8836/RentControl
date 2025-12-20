@@ -6,8 +6,9 @@ import org.igorv8836.bdui.actions.ActionContext
 import org.igorv8836.bdui.actions.ActionHandler
 import org.igorv8836.bdui.actions.ActionRegistry
 import org.igorv8836.bdui.actions.Router
-import org.igorv8836.bdui.contract.Action
-import org.igorv8836.bdui.contract.ActionType
+import org.igorv8836.bdui.contract.ForwardAction
+import org.igorv8836.bdui.contract.OverlayAction
+import org.igorv8836.bdui.contract.PopupAction
 import org.igorv8836.bdui.contract.ButtonElement
 import org.igorv8836.bdui.contract.ButtonKind
 import org.igorv8836.bdui.contract.Container
@@ -27,15 +28,26 @@ fun DemoScreen(
     modifier: Modifier = Modifier,
 ) {
     // Actions registry
-    val startAction = Action(id = "start-flow", type = ActionType.Navigate)
-    val browseAction = Action(id = "browse", type = ActionType.Navigate)
+    val startAction = ForwardAction(id = "start-flow", path = "/flow/start")
+    val browseAction = ForwardAction(id = "browse", path = "/catalog")
     val detailActions = listOf(
-        Action(id = "details-1", type = ActionType.Navigate),
-        Action(id = "details-2", type = ActionType.Navigate),
-        Action(id = "details-3", type = ActionType.Navigate),
+        ForwardAction(id = "details-1", path = "/details/1"),
+        ForwardAction(id = "details-2", path = "/details/2"),
+        ForwardAction(id = "details-3", path = "/details/3"),
     )
-    val analyticsAction = Action(id = "rate", type = ActionType.Analytics)
-    val supportAction = Action(id = "support", type = ActionType.Custom)
+    val analyticsAction = PopupAction(
+        id = "rate",
+        popup = org.igorv8836.bdui.contract.Popup(
+            payload = mapOf("title" to "Rate your experience"),
+        ),
+    )
+    val supportAction = OverlayAction(
+        id = "support",
+        overlay = org.igorv8836.bdui.contract.Overlay(
+            kind = org.igorv8836.bdui.contract.OverlayKind.Banner,
+            payload = mapOf("message" to "Need help?"),
+        ),
+    )
 
     // Sample screen tree with nested layout and list
     val screen = Screen(
@@ -145,15 +157,16 @@ fun DemoScreen(
     val registry = ActionRegistry(
         handlers = buildMap {
             put(startAction.id, ActionHandler { _, context ->
-                context.router.navigate(route = Route(destination = "flow/start"))
+                context.router.navigate(route = Route(destination = startAction.path ?: "flow/start"))
                 context.analytics("start_flow", emptyMap())
             })
             put(browseAction.id, ActionHandler { _, context ->
-                context.router.navigate(route = Route(destination = "catalog"))
+                context.router.navigate(route = Route(destination = browseAction.path ?: "catalog"))
             })
             detailActions.forEach { action ->
                 put(action.id, ActionHandler { _, context ->
-                    context.router.navigate(route = Route(destination = "details/${action.id}"))
+                    val destination = action.path ?: "details/${action.id}"
+                    context.router.navigate(route = Route(destination = destination))
                 })
             }
             put(analyticsAction.id, ActionHandler { _, context ->
