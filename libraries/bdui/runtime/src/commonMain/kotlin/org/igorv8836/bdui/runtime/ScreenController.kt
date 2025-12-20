@@ -126,9 +126,8 @@ class DefaultScreenController(
     }
 
     fun loadNextPage() {
-        // Placeholder for pagination effect; repo can be extended to support pagination params.
-        store.setLoadingMore(true)
-        store.setLoadingMore(false)
+        val settings = state.value.screen?.settings?.pagination
+        store.loadNextPage(settings = settings)
         triggerEngine?.onEvent(ScreenEventType.LoadNextPageCompleted)
     }
 
