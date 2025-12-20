@@ -13,11 +13,14 @@ import org.igorv8836.bdui.contract.ButtonElement
 import org.igorv8836.bdui.contract.ButtonKind
 import org.igorv8836.bdui.contract.Container
 import org.igorv8836.bdui.contract.ContainerDirection
+import org.igorv8836.bdui.contract.Overlay
+import org.igorv8836.bdui.contract.OverlayKind
 import org.igorv8836.bdui.contract.ImageElement
 import org.igorv8836.bdui.contract.Layout
 import org.igorv8836.bdui.contract.LazyListElement
 import org.igorv8836.bdui.contract.Route
 import org.igorv8836.bdui.contract.Screen
+import org.igorv8836.bdui.contract.Popup
 import org.igorv8836.bdui.contract.TextElement
 import org.igorv8836.bdui.renderer.ScreenHost
 import org.igorv8836.bdui.runtime.ScreenState
@@ -37,14 +40,14 @@ fun DemoScreen(
     )
     val analyticsAction = PopupAction(
         id = "rate",
-        popup = org.igorv8836.bdui.contract.Popup(
+        popup = Popup(
             payload = mapOf("title" to "Rate your experience"),
         ),
     )
     val supportAction = OverlayAction(
         id = "support",
-        overlay = org.igorv8836.bdui.contract.Overlay(
-            kind = org.igorv8836.bdui.contract.OverlayKind.Banner,
+        overlay = Overlay(
+            kind = OverlayKind.Banner,
             payload = mapOf("message" to "Need help?"),
         ),
     )
