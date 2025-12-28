@@ -1,9 +1,11 @@
 package org.igorv8836.bdui.runtime
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.igorv8836.bdui.contract.StoragePolicy
 import org.igorv8836.bdui.contract.VariableScope
@@ -53,11 +55,13 @@ class VariableStoreImpl(
     private val maxValueChars: Int = 4096,
     private val conflictStrategy: ConflictStrategy = ConflictStrategy.DbAsSourceOfTruth,
     private val syncIntervalMs: Long = 60_000,
+    private val enableSync: Boolean = true,
     private val scope: CoroutineScope,
 ) : VariableStore {
     private val globalMemory: MutableMap<String, StoredVariable> = mutableMapOf()
     private val screenMemory: MutableMap<String, MutableMap<String, StoredVariable>> = mutableMapOf()
     private val changeSignal = MutableStateFlow(0L)
+    private val syncJob: Job?
 
     sealed interface ConflictStrategy {
         data object DbAsSourceOfTruth : ConflictStrategy
@@ -65,11 +69,15 @@ class VariableStoreImpl(
     }
 
     init {
-        scope.launch {
-            while (true) {
-                syncFromPersistent()
-                delay(syncIntervalMs)
+        syncJob = if (enableSync) {
+            scope.launch {
+                while (isActive) {
+                    syncFromPersistent()
+                    delay(syncIntervalMs)
+                }
             }
+        } else {
+            null
         }
     }
 
@@ -188,5 +196,9 @@ class VariableStoreImpl(
 
     private fun notifyChanged() {
         changeSignal.value = changeSignal.value + 1
+    }
+
+    override fun dispose() {
+        syncJob?.cancel()
     }
 }

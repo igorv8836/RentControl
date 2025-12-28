@@ -23,6 +23,7 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(projects.libraries.bdui.testing)
         }
     }
 }

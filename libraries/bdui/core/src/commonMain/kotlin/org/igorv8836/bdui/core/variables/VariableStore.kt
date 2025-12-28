@@ -36,4 +36,6 @@ interface VariableStore {
     )
 
     suspend fun syncFromPersistent(screenId: String? = null)
+
+    fun dispose()
 }

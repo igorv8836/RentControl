@@ -1,6 +1,7 @@
 package org.igorv8836.bdui.engine
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.igorv8836.bdui.actions.buildActionRegistry
@@ -66,6 +67,8 @@ class ScreenEngine internal constructor(
     fun dispose() {
         triggerEngine?.stop()
         controller.dispose()
+        variableStore.dispose()
+        scope.cancel()
     }
 
     private fun handleState(snapshot: ScreenState) {

@@ -47,8 +47,9 @@ class CachedScreenRepository(
 
     private fun cacheKey(screenId: String, params: Map<String, String>): String {
         if (params.isEmpty()) return screenId
-        val sorted = params.toSortedMap()
-        val suffix = sorted.entries.joinToString("&") { "${it.key}=${it.value}" }
+        val suffix = params.entries
+            .sortedBy { it.key }
+            .joinToString("&") { "${it.key}=${it.value}" }
         return "$screenId?$suffix"
     }
 }

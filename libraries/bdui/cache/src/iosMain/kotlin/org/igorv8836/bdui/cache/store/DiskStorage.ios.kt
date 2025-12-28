@@ -2,6 +2,7 @@ package org.igorv8836.bdui.cache.store
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSHomeDirectory
 import platform.Foundation.NSString
@@ -9,6 +10,7 @@ import platform.Foundation.NSUTF8StringEncoding
 import platform.Foundation.stringWithContentsOfFile
 import platform.Foundation.writeToFile
 
+@OptIn(ExperimentalForeignApi::class)
 actual class DiskStorage actual constructor(basePath: String) {
     private val dirPath: String = buildString {
         val root = if (basePath.startsWith("/")) basePath else NSHomeDirectory() + "/$basePath"
@@ -22,7 +24,13 @@ actual class DiskStorage actual constructor(basePath: String) {
     actual suspend fun write(key: String, content: String) {
         withContext(Dispatchers.Default) {
             NSFileManager.defaultManager.createDirectoryAtPath(dirPath, true, null, null)
-            NSString.create(string = content).writeToFile(filePath(key), atomically = true, encoding = NSUTF8StringEncoding, error = null)
+            val nsString: NSString = content as NSString
+            nsString.writeToFile(
+                filePath(key),
+                atomically = true,
+                encoding = NSUTF8StringEncoding,
+                error = null,
+            )
         }
     }
 

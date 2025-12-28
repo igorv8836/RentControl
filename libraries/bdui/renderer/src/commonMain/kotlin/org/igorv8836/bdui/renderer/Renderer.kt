@@ -294,7 +294,7 @@ private fun containsLazyList(node: ComponentNode): Boolean =
         else -> false
     }
 
-private class BindingResolver(
+internal class BindingResolver(
     private val variables: VariableStore,
     private val screenId: String,
     private val translate: (String) -> String,
