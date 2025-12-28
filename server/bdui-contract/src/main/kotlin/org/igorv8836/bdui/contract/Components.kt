@@ -13,6 +13,20 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     JsonSubTypes.Type(value = SpacerElement::class),
     JsonSubTypes.Type(value = DividerElement::class),
     JsonSubTypes.Type(value = ListItemElement::class),
+    JsonSubTypes.Type(value = CardElement::class),
+    JsonSubTypes.Type(value = CardGridElement::class),
+    JsonSubTypes.Type(value = TabsElement::class),
+    JsonSubTypes.Type(value = TextFieldElement::class),
+    JsonSubTypes.Type(value = DropdownElement::class),
+    JsonSubTypes.Type(value = SliderElement::class),
+    JsonSubTypes.Type(value = SwitchElement::class),
+    JsonSubTypes.Type(value = ChipGroupElement::class),
+    JsonSubTypes.Type(value = CarouselElement::class),
+    JsonSubTypes.Type(value = ModalElement::class),
+    JsonSubTypes.Type(value = SnackbarElement::class),
+    JsonSubTypes.Type(value = StateElement::class),
+    JsonSubTypes.Type(value = ProgressElement::class),
+    JsonSubTypes.Type(value = MapElement::class),
 )
 sealed interface ComponentNode {
     val id: String

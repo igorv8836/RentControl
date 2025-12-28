@@ -19,7 +19,34 @@ import org.igorv8836.bdui.contract.LazyListElement
 import org.igorv8836.bdui.contract.ListItemElement
 import org.igorv8836.bdui.contract.SpacerElement
 import org.igorv8836.bdui.contract.TextElement
+import org.igorv8836.bdui.contract.CardElement
+import org.igorv8836.bdui.contract.CardGridElement
+import org.igorv8836.bdui.contract.TabsElement
+import org.igorv8836.bdui.contract.TextFieldElement
+import org.igorv8836.bdui.contract.DropdownElement
+import org.igorv8836.bdui.contract.SliderElement
+import org.igorv8836.bdui.contract.SwitchElement
+import org.igorv8836.bdui.contract.ChipGroupElement
+import org.igorv8836.bdui.contract.CarouselElement
+import org.igorv8836.bdui.contract.ModalElement
+import org.igorv8836.bdui.contract.SnackbarElement
+import org.igorv8836.bdui.contract.StateElement
+import org.igorv8836.bdui.contract.ProgressElement
+import org.igorv8836.bdui.contract.MapElement
 import org.igorv8836.bdui.renderer.binding.BindingResolver
+import org.igorv8836.bdui.components.CardComponent
+import org.igorv8836.bdui.components.CardGridComponent
+import org.igorv8836.bdui.components.TabsComponent
+import org.igorv8836.bdui.components.TextFieldComponent
+import org.igorv8836.bdui.components.DropdownComponent
+import org.igorv8836.bdui.components.SliderComponent
+import org.igorv8836.bdui.components.SwitchComponent
+import org.igorv8836.bdui.components.ChipGroupComponent
+import org.igorv8836.bdui.components.CarouselComponent
+import org.igorv8836.bdui.components.SnackbarComponent
+import org.igorv8836.bdui.components.StateComponent
+import org.igorv8836.bdui.components.ProgressComponent
+import org.igorv8836.bdui.components.MapPlaceholderComponent
 
 internal data class PaginationConfig(
     val prefetchDistance: Int,
@@ -99,6 +126,130 @@ internal fun RenderNode(
                 subtitle = node.subtitle?.let { key -> resolver.text(key, null) },
                 onAction = { id -> onAction(id) },
                 enabled = resolver.isEnabled(true, node.enabledIf),
+                modifier = modifier,
+            )
+        }
+        is CardGridElement -> if (resolver.isVisible(node.visibleIf)) {
+            CardGridComponent(
+                node = node,
+                renderCard = { card ->
+                    if (resolver.isVisible(card.visibleIf)) {
+                        CardComponent(
+                            node = card,
+                            onAction = card.actionId?.let { id -> { onAction(id) } },
+                        )
+                    }
+                },
+                modifier = modifier,
+            )
+        }
+        is CardElement -> if (resolver.isVisible(node.visibleIf)) {
+            CardComponent(
+                node = node,
+                modifier = modifier,
+                onAction = { actionId -> onAction(actionId) },
+            )
+        }
+        is TabsElement -> if (resolver.isVisible(node.visibleIf)) {
+            val visibleTabs = node.tabs.filter { tab -> resolver.isVisible(tab.visibleIf) }
+            TabsComponent(
+                node = node.copy(tabs = visibleTabs),
+                modifier = modifier,
+                onAction = onAction,
+            )
+        }
+        is TextFieldElement -> if (resolver.isVisible(node.visibleIf)) {
+            TextFieldComponent(
+                node = node,
+                modifier = modifier,
+                onAction = { id -> id?.let(onAction) },
+            )
+        }
+        is DropdownElement -> if (resolver.isVisible(node.visibleIf)) {
+            DropdownComponent(
+                node = node,
+                modifier = modifier,
+                onAction = { id -> id?.let(onAction) },
+            )
+        }
+        is SliderElement -> if (resolver.isVisible(node.visibleIf)) {
+            SliderComponent(
+                node = node,
+                modifier = modifier,
+                onAction = { id -> id?.let(onAction) },
+            )
+        }
+        is SwitchElement -> if (resolver.isVisible(node.visibleIf)) {
+            SwitchComponent(
+                node = node,
+                modifier = modifier,
+                onAction = { id -> id?.let(onAction) },
+            )
+        }
+        is ChipGroupElement -> if (resolver.isVisible(node.visibleIf)) {
+            ChipGroupComponent(
+                node = node,
+                modifier = modifier,
+                onAction = { actionId -> actionId?.let(onAction) },
+            )
+        }
+        is CarouselElement -> if (resolver.isVisible(node.visibleIf)) {
+            CarouselComponent(
+                node = node,
+                renderChild = { child ->
+                    RenderNode(
+                        node = child,
+                        onAction = onAction,
+                        resolver = resolver,
+                        modifier = Modifier,
+                        pagination = pagination,
+                    )
+                },
+                modifier = modifier,
+            )
+        }
+        is ModalElement -> if (resolver.isVisible(node.visibleIf)) {
+            CardComponent(
+                node = CardElement(
+                    id = node.id,
+                    title = "",
+                    subtitle = null,
+                    actionId = node.primaryActionId,
+                ),
+                modifier = modifier,
+                onAction = { id -> onAction(id) },
+            )
+            RenderNode(
+                node = node.content,
+                onAction = onAction,
+                resolver = resolver,
+                modifier = modifier,
+                pagination = pagination,
+            )
+        }
+        is SnackbarElement -> if (resolver.isVisible(node.visibleIf)) {
+            SnackbarComponent(
+                node = node,
+                modifier = modifier,
+                onAction = { id -> id?.let(onAction) },
+            )
+        }
+        is StateElement -> if (resolver.isVisible(node.visibleIf)) {
+            StateComponent(
+                node = node,
+                modifier = modifier,
+                onAction = { id -> id?.let(onAction) },
+            )
+        }
+        is ProgressElement -> if (resolver.isVisible(node.visibleIf)) {
+            ProgressComponent(
+                node = node,
+                modifier = modifier,
+            )
+        }
+        is MapElement -> if (resolver.isVisible(node.visibleIf)) {
+            MapPlaceholderComponent(
+                node = node,
                 modifier = modifier,
             )
         }

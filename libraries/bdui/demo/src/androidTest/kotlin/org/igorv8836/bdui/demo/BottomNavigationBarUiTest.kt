@@ -205,4 +205,4 @@ class BottomNavigationBarUiTest {
     }
 }
 
-private data class TestAction(override val id: String) : Action
+data class TestAction(override val id: String) : Action

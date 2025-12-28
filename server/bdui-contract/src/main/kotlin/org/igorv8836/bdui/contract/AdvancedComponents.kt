@@ -1,120 +1,8 @@
 package org.igorv8836.bdui.contract
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import com.fasterxml.jackson.annotation.JsonTypeName
 
-@Serializable
-sealed interface ComponentNode {
-    val id: String
-}
-
-@Serializable
-@SerialName("Container")
-data class Container(
-    override val id: String,
-    val direction: ContainerDirection,
-    val children: List<ComponentNode> = emptyList(),
-    val spacing: Float? = null,
-    val visibleIf: Condition? = null,
-) : ComponentNode
-
-@Serializable
-enum class ContainerDirection {
-    Column,
-    Row,
-    Overlay,
-}
-
-@Serializable
-@SerialName("TextElement")
-data class TextElement(
-    override val id: String,
-    val text: String,
-    val style: TextStyle = TextStyle.Body,
-    val semantics: Semantics? = null,
-    val template: String? = null,
-    val visibleIf: Condition? = null,
-) : ComponentNode
-
-@Serializable
-enum class TextStyle {
-    Title,
-    Subtitle,
-    Body,
-    Caption,
-}
-
-@Serializable
-@SerialName("ButtonElement")
-data class ButtonElement(
-    override val id: String,
-    val title: String,
-    val actionId: String,
-    val kind: ButtonKind = ButtonKind.Primary,
-    val isEnabled: Boolean = true,
-    val semantics: Semantics? = null,
-    val enabledIf: Condition? = null,
-    val visibleIf: Condition? = null,
-) : ComponentNode
-
-@Serializable
-enum class ButtonKind {
-    Primary,
-    Secondary,
-    Ghost,
-}
-
-@Serializable
-@SerialName("ImageElement")
-data class ImageElement(
-    override val id: String,
-    val url: String,
-    val description: String? = null,
-    val visibleIf: Condition? = null,
-) : ComponentNode
-
-@Serializable
-@SerialName("LazyListElement")
-data class LazyListElement(
-    override val id: String,
-    val items: List<ComponentNode>,
-    val placeholderCount: Int = 0,
-    val visibleIf: Condition? = null,
-) : ComponentNode
-
-@Serializable
-@SerialName("SpacerElement")
-data class SpacerElement(
-    override val id: String,
-    val width: Float? = null,
-    val height: Float? = null,
-    val visibleIf: Condition? = null,
-) : ComponentNode
-
-@Serializable
-@SerialName("DividerElement")
-data class DividerElement(
-    override val id: String,
-    val thickness: Float? = null,
-    val color: String? = null,
-    val insetStart: Float? = null,
-    val visibleIf: Condition? = null,
-) : ComponentNode
-
-@Serializable
-@SerialName("ListItemElement")
-data class ListItemElement(
-    override val id: String,
-    val title: String,
-    val subtitle: String? = null,
-    val actionId: String? = null,
-    val semantics: Semantics? = null,
-    val enabledIf: Condition? = null,
-    val visibleIf: Condition? = null,
-) : ComponentNode
-
-@Serializable
-@SerialName("CardElement")
+@JsonTypeName("CardElement")
 data class CardElement(
     override val id: String,
     val title: String,
@@ -125,8 +13,7 @@ data class CardElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@Serializable
-@SerialName("CardGridElement")
+@JsonTypeName("CardGridElement")
 data class CardGridElement(
     override val id: String,
     val items: List<CardElement>,
@@ -134,8 +21,7 @@ data class CardGridElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@Serializable
-@SerialName("TabsElement")
+@JsonTypeName("TabsElement")
 data class TabsElement(
     override val id: String,
     val tabs: List<TabItem>,
@@ -143,7 +29,6 @@ data class TabsElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@Serializable
 data class TabItem(
     val id: String,
     val title: String,
@@ -152,8 +37,7 @@ data class TabItem(
     val visibleIf: Condition? = null,
 )
 
-@Serializable
-@SerialName("TextFieldElement")
+@JsonTypeName("TextFieldElement")
 data class TextFieldElement(
     override val id: String,
     val label: String,
@@ -163,8 +47,7 @@ data class TextFieldElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@Serializable
-@SerialName("DropdownElement")
+@JsonTypeName("DropdownElement")
 data class DropdownElement(
     override val id: String,
     val label: String,
@@ -174,8 +57,7 @@ data class DropdownElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@Serializable
-@SerialName("SliderElement")
+@JsonTypeName("SliderElement")
 data class SliderElement(
     override val id: String,
     val value: Float = 0f,
@@ -185,8 +67,7 @@ data class SliderElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@Serializable
-@SerialName("SwitchElement")
+@JsonTypeName("SwitchElement")
 data class SwitchElement(
     override val id: String,
     val checked: Boolean = false,
@@ -195,8 +76,7 @@ data class SwitchElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@Serializable
-@SerialName("ChipGroupElement")
+@JsonTypeName("ChipGroupElement")
 data class ChipGroupElement(
     override val id: String,
     val chips: List<ChipItem>,
@@ -204,7 +84,6 @@ data class ChipGroupElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@Serializable
 data class ChipItem(
     val id: String,
     val label: String,
@@ -213,16 +92,14 @@ data class ChipItem(
     val visibleIf: Condition? = null,
 )
 
-@Serializable
-@SerialName("CarouselElement")
+@JsonTypeName("CarouselElement")
 data class CarouselElement(
     override val id: String,
     val items: List<ComponentNode>,
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@Serializable
-@SerialName("ModalElement")
+@JsonTypeName("ModalElement")
 data class ModalElement(
     override val id: String,
     val content: ComponentNode,
@@ -231,8 +108,7 @@ data class ModalElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@Serializable
-@SerialName("SnackbarElement")
+@JsonTypeName("SnackbarElement")
 data class SnackbarElement(
     override val id: String,
     val message: String,
@@ -241,8 +117,7 @@ data class SnackbarElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@Serializable
-@SerialName("StateElement")
+@JsonTypeName("StateElement")
 data class StateElement(
     override val id: String,
     val state: StateKind,
@@ -251,11 +126,9 @@ data class StateElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@Serializable
 enum class StateKind { Loading, Empty, Error, Success }
 
-@Serializable
-@SerialName("ProgressElement")
+@JsonTypeName("ProgressElement")
 data class ProgressElement(
     override val id: String,
     val style: ProgressStyle = ProgressStyle.Linear,
@@ -263,11 +136,9 @@ data class ProgressElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@Serializable
 enum class ProgressStyle { Linear, Circular }
 
-@Serializable
-@SerialName("MapElement")
+@JsonTypeName("MapElement")
 data class MapElement(
     override val id: String,
     val title: String? = null,
