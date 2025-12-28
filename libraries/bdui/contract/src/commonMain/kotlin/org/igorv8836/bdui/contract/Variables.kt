@@ -43,23 +43,8 @@ sealed interface VariableValue {
 }
 
 @Serializable
-enum class MissingVariableBehavior {
-    Empty,
-    Default,
-    Error,
-}
-
-@Serializable
-data class Binding(
-    val key: String,
-    val scope: VariableScope = VariableScope.Global,
-    val default: VariableValue? = null,
-    val missingBehavior: MissingVariableBehavior = MissingVariableBehavior.Empty,
-)
-
-@Serializable
 data class Condition(
-    val binding: Binding,
+    val key: String,
     val equals: VariableValue? = null,
     val exists: Boolean = true,
     val negate: Boolean = false,

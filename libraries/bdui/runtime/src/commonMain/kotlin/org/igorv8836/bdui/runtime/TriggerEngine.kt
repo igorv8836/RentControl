@@ -3,9 +3,7 @@ package org.igorv8836.bdui.runtime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import org.igorv8836.bdui.contract.Binding
 import org.igorv8836.bdui.contract.Condition
-import org.igorv8836.bdui.contract.MissingVariableBehavior
 import org.igorv8836.bdui.contract.ScreenEventType
 import org.igorv8836.bdui.contract.Trigger
 import org.igorv8836.bdui.contract.TriggerSource
@@ -88,7 +86,7 @@ class TriggerEngine(
 
     private fun checkCondition(condition: Condition?): Boolean {
         condition ?: return true
-        val value = resolveValue(condition.binding)
+        val value = resolveValue(condition.key)
         val exists = value != null
         if (!exists) {
             return !condition.exists
@@ -98,15 +96,9 @@ class TriggerEngine(
         return result
     }
 
-    private fun resolveValue(binding: Binding): VariableValue? {
-        val value = variableStore.peek(binding.key, binding.scope, screenId)
-        return when {
-            value != null -> value
-            binding.missingBehavior == MissingVariableBehavior.Default -> binding.default
-            binding.missingBehavior == MissingVariableBehavior.Error -> throw IllegalStateException("Variable '${binding.key}' is missing")
-            else -> null
-        }
-    }
+    private fun resolveValue(key: String): VariableValue? =
+        variableStore.peek(key, VariableScope.Screen, screenId)
+            ?: variableStore.peek(key, VariableScope.Global, null)
 
     private fun isTruthy(value: VariableValue): Boolean =
         when (value) {

@@ -21,14 +21,14 @@ fun buildCatalogScreen(offers: List<OfferDto>): RemoteScreen = screen(id = "cata
             direction = ContainerDirection.Column,
             spacing = 12f,
         ) {
-            text(id = "catalog-title", textKey = "Catalog")
+            text(id = "catalog-title", text = "Catalog")
             text(
                 id = "catalog-subtitle",
-                textKey = "Pick any item to open its details. The list is served from the backend.",
+                text = "Pick any item to open its details. The list is served from the backend.",
             )
             button(
                 id = "catalog-home",
-                titleKey = "Back to home",
+                title = "Back to home",
                 actionId = backToHome.id,
                 kind = ButtonKind.Secondary,
             )
@@ -36,8 +36,8 @@ fun buildCatalogScreen(offers: List<OfferDto>): RemoteScreen = screen(id = "cata
                 offers.forEach { offer ->
                     listItem(
                         id = "catalog-${offer.id}",
-                        titleKey = offer.title,
-                        subtitleKey = offer.subtitle,
+                        title = offer.title,
+                        subtitle = offer.subtitle,
                         actionId = "catalog-details-${offer.id}",
                     )
                 }

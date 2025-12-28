@@ -1,6 +1,5 @@
 package org.igorv8836.bdui.backend.dsl
 
-import org.igorv8836.bdui.contract.Binding
 import org.igorv8836.bdui.contract.ButtonElement
 import org.igorv8836.bdui.contract.ButtonKind
 import org.igorv8836.bdui.contract.ComponentNode
@@ -40,40 +39,36 @@ class ContainerScope {
 
     fun text(
         id: String,
-        textKey: String,
+        text: String,
         style: TextStyle = TextStyle.Body,
-        binding: Binding? = null,
         template: String? = null,
         semantics: Semantics? = null,
         visibleIf: Condition? = null,
     ): TextElement = TextElement(
         id = id,
-        textKey = textKey,
+        text = text,
         style = style,
         semantics = semantics,
-        binding = binding,
         template = template,
         visibleIf = visibleIf,
     ).also { children += it }
 
     fun button(
         id: String,
-        titleKey: String,
+        title: String,
         actionId: String,
         kind: ButtonKind = ButtonKind.Primary,
         isEnabled: Boolean = true,
         enabledIf: Condition? = null,
         visibleIf: Condition? = null,
-        titleBinding: Binding? = null,
         semantics: Semantics? = null,
     ): ButtonElement = ButtonElement(
         id = id,
-        titleKey = titleKey,
+        title = title,
         actionId = actionId,
         kind = kind,
         isEnabled = isEnabled,
         semantics = semantics,
-        titleBinding = titleBinding,
         enabledIf = enabledIf,
         visibleIf = visibleIf,
     ).also { children += it }
@@ -133,22 +128,18 @@ class ContainerScope {
 
     fun listItem(
         id: String,
-        titleKey: String,
-        subtitleKey: String? = null,
+        title: String,
+        subtitle: String? = null,
         actionId: String? = null,
         semantics: Semantics? = null,
-        titleBinding: Binding? = null,
-        subtitleBinding: Binding? = null,
         enabledIf: Condition? = null,
         visibleIf: Condition? = null,
     ): ListItemElement = ListItemElement(
         id = id,
-        titleKey = titleKey,
-        subtitleKey = subtitleKey,
+        title = title,
+        subtitle = subtitle,
         actionId = actionId,
         semantics = semantics,
-        titleBinding = titleBinding,
-        subtitleBinding = subtitleBinding,
         enabledIf = enabledIf,
         visibleIf = visibleIf,
     ).also { children += it }

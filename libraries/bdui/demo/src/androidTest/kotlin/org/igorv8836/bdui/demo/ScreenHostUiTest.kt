@@ -3,6 +3,7 @@ package org.igorv8836.bdui.demo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -11,6 +12,12 @@ import org.igorv8836.bdui.contract.RemoteScreen
 import org.igorv8836.bdui.contract.ScreenSettings
 import org.igorv8836.bdui.contract.TextElement
 import org.igorv8836.bdui.contract.TextStyle
+import org.igorv8836.bdui.contract.ButtonElement
+import org.igorv8836.bdui.contract.Container
+import org.igorv8836.bdui.contract.ContainerDirection
+import org.igorv8836.bdui.contract.VariableValue
+import org.igorv8836.bdui.actions.variables.SetVariableAction
+import org.igorv8836.bdui.contract.VariableScope
 import org.igorv8836.bdui.core.navigation.Navigator
 import org.igorv8836.bdui.engine.ScreenEngineFactory
 import org.igorv8836.bdui.renderer.ScreenHost
@@ -31,7 +38,7 @@ class ScreenHostUiTest {
         val screen = RemoteScreen(
             id = "home",
             version = 1,
-            layout = Layout(root = TextElement(id = "welcome", textKey = "Hello", style = TextStyle.Body)),
+            layout = Layout(root = TextElement(id = "welcome", text = "Hello", style = TextStyle.Body)),
             settings = ScreenSettings(scrollable = false),
         )
         val engine = ScreenEngineFactory(
@@ -50,7 +57,6 @@ class ScreenHostUiTest {
             ScreenHost(
                 state = ScreenState(remoteScreen = screen, status = ScreenStatus.Ready, empty = false),
                 actionRegistry = engine.actionRegistry,
-                resolve = { it },
                 variableStore = engine.variableStore,
                 navigator = NoopNavigator,
             )
@@ -58,6 +64,67 @@ class ScreenHostUiTest {
 
         composeRule.onNodeWithText("Hello").assertIsDisplayed()
         assertEquals(ScreenStatus.Ready, engine.state.value.status)
+    }
+
+    @Test
+    fun updatesTextWhenVariableChangesViaAction() {
+        val setName = SetVariableAction(
+            id = "set-name",
+            key = "name",
+            value = VariableValue.StringValue("Tester"),
+        )
+        val screen = RemoteScreen(
+            id = "home",
+            version = 1,
+            layout = Layout(
+                root = Container(
+                    id = "root",
+                    direction = ContainerDirection.Column,
+                    children = listOf(
+                        TextElement(
+                            id = "welcome",
+                            text = "welcome",
+                            template = "Hi @{name}",
+                            style = TextStyle.Body,
+                        ),
+                        ButtonElement(
+                            id = "btn-set",
+            title = "Set name",
+                            actionId = setName.id,
+                        ),
+                    ),
+                ),
+            ),
+            settings = ScreenSettings(scrollable = false),
+            actions = listOf(setName),
+        )
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+        val engine = ScreenEngineFactory(
+            repository = object : ScreenRepository {
+                override suspend fun fetch(screenId: String, params: Map<String, String>): Result<RemoteScreen> =
+                    Result.success(screen)
+            },
+            navigator = NoopNavigator,
+            variableStore = VariableStoreImpl(scope = scope),
+        ).create("home", scope)
+
+        engine.show(screen)
+
+        composeRule.setContent {
+            ScreenHost(
+                state = ScreenState(remoteScreen = screen, status = ScreenStatus.Ready, empty = false),
+                actionRegistry = engine.actionRegistry,
+                variableStore = engine.variableStore,
+                navigator = NoopNavigator,
+            )
+        }
+
+        // Trigger action to set the variable
+        composeRule.onNodeWithText("Set name").performClick()
+        composeRule.onNodeWithText("Hi Tester").assertIsDisplayed()
+
+        val stored = engine.variableStore.peek("name", VariableScope.Global, null) as VariableValue.StringValue
+        assertEquals("Tester", stored.value)
     }
 }
 

@@ -21,4 +21,4 @@ cd "${repo_root}"
   :libraries:bdui:testing:allTests
 
 # Example for UI/device tests:
-# ./gradlew :libraries:bdui:demo:connectedAndroidTest
+ ./gradlew :libraries:bdui:demo:connectedAndroidTest

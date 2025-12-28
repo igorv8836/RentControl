@@ -36,7 +36,6 @@ import org.igorv8836.bdui.components.LazyListComponent
 import org.igorv8836.bdui.components.ListItemComponent
 import org.igorv8836.bdui.components.SpacerComponent
 import org.igorv8836.bdui.components.TextComponent
-import org.igorv8836.bdui.contract.Binding
 import org.igorv8836.bdui.contract.ButtonElement
 import org.igorv8836.bdui.contract.ComponentNode
 import org.igorv8836.bdui.contract.Condition
@@ -45,7 +44,6 @@ import org.igorv8836.bdui.contract.DividerElement
 import org.igorv8836.bdui.contract.ImageElement
 import org.igorv8836.bdui.contract.LazyListElement
 import org.igorv8836.bdui.contract.ListItemElement
-import org.igorv8836.bdui.contract.MissingVariableBehavior
 import org.igorv8836.bdui.contract.RemoteScreen
 import org.igorv8836.bdui.contract.SpacerElement
 import org.igorv8836.bdui.contract.TextElement
@@ -63,7 +61,6 @@ import org.igorv8836.bdui.runtime.ScreenStatus
 fun ScreenHost(
     state: ScreenState,
     actionRegistry: ActionRegistry,
-    resolve: (String) -> String,
     variableStore: VariableStore,
     navigator: Navigator,
     screenId: String? = null,
@@ -112,7 +109,6 @@ fun ScreenHost(
             RenderScreen(
                 remoteScreen = screen,
                 onAction = { actionId -> dispatch(actionId, screen) },
-                resolve = resolve,
                 variables = variables,
                 screenId = screenId ?: screen.id,
                 modifier = modifier,
@@ -147,7 +143,6 @@ fun ScreenHost(
 private fun RenderScreen(
     remoteScreen: RemoteScreen,
     onAction: (String) -> Unit,
-    resolve: (String) -> String,
     variables: VariableStore,
     screenId: String,
     variablesVersion: Long,
@@ -163,7 +158,6 @@ private fun RenderScreen(
         BindingResolver(
             variables = variables,
             screenId = screenId,
-            translate = resolve,
         )
     }
     val contentModifier = Modifier
@@ -297,18 +291,15 @@ private fun containsLazyList(node: ComponentNode): Boolean =
 internal class BindingResolver(
     private val variables: VariableStore,
     private val screenId: String,
-    private val translate: (String) -> String,
 ) {
-    fun text(key: String?, binding: Binding?, template: String?): String {
-        val direct = binding?.let { resolveBinding(it) }
-        if (direct != null) return direct
-        val base = template ?: key?.takeIf { it.isNotBlank() }?.let(translate)
+    fun text(key: String?, template: String?): String {
+        val base = template ?: key?.takeIf { it.isNotBlank() }
         return base?.let { interpolate(it) } ?: ""
     }
 
     fun isVisible(condition: Condition?): Boolean {
         if (condition == null) return true
-        val value = resolveValue(condition.binding)
+        val value = resolveValue(condition.key)
         val exists = value != null
         if (!exists) {
             return !condition.exists
@@ -323,27 +314,12 @@ internal class BindingResolver(
         return isVisible(condition)
     }
 
-    private fun resolveBinding(binding: Binding): String? {
-        val value = resolveValue(binding)
-        return value?.let { valueToString(it) }
-    }
-
-    private fun resolveValue(binding: Binding): VariableValue? {
-        val stored = variables.peek(binding.key, binding.scope, screenId)
-        return when {
-            stored != null -> stored
-            binding.missingBehavior == MissingVariableBehavior.Default -> binding.default
-            binding.missingBehavior == MissingVariableBehavior.Error -> throw IllegalStateException("Variable '${binding.key}' is missing")
-            else -> null
-        }
-    }
-
     private fun interpolate(template: String): String {
-        val regex = Regex("\\{\\{\\s*(.*?)\\s*\\}\\}")
+        val regex = Regex("@\\{\\s*(.*?)\\s*\\}")
         return regex.replace(template) { match ->
             val key = match.groupValues.getOrNull(1)?.trim().orEmpty()
-            val resolved = variables.peek(key, VariableScope.Global, screenId)
-            resolved?.let { valueToString(it) } ?: match.value
+            val resolved = resolveValue(key)
+            resolved?.let { valueToString(it) } ?: ""
         }
     }
 
@@ -375,6 +351,11 @@ internal class BindingResolver(
                 postfix = "}",
             ) { (key, inner) -> "$key:${valueToString(inner)}" }
         }
+
+    private fun resolveValue(key: String): VariableValue? {
+        variables.peek(key, VariableScope.Screen, screenId)?.let { return it }
+        return variables.peek(key, VariableScope.Global, null)
+    }
 }
 
 private data class PaginationConfig(
@@ -394,12 +375,12 @@ private fun RenderNode(
     when (node) {
         is TextElement -> {
             if (!resolver.isVisible(node.visibleIf)) return
-            val text = resolver.text(node.textKey, node.binding, node.template)
+            val text = resolver.text(node.text, node.template)
             TextComponent(node = node, text = text, modifier = modifier)
         }
         is ButtonElement -> ButtonComponent(
             node = node,
-            title = resolver.text(node.titleKey, node.titleBinding, null),
+            title = resolver.text(node.title, null),
             enabled = resolver.isEnabled(node.isEnabled, node.enabledIf),
             onAction = onAction,
             modifier = modifier,
@@ -451,8 +432,8 @@ private fun RenderNode(
         is ListItemElement -> if (resolver.isVisible(node.visibleIf)) {
             ListItemComponent(
                 node = node,
-                title = resolver.text(node.titleKey, node.titleBinding, null),
-                subtitle = node.subtitleKey?.let { key -> resolver.text(key, node.subtitleBinding, null) },
+                title = resolver.text(node.title, null),
+                subtitle = node.subtitle?.let { key -> resolver.text(key, null) },
                 onAction = { id -> onAction(id) },
                 enabled = resolver.isEnabled(true, node.enabledIf),
                 modifier = modifier,

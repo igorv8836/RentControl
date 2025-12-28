@@ -147,11 +147,14 @@ class ScreenEngineFactory(
     private val navigator: Navigator,
     private val actionRegistry: ActionRegistry? = null,
     private val variableStore: VariableStore? = null,
+    private val globalStore: VariableStore? = null,
     private val logger: Logger = ConsoleLogger(LogTags.ENGINE),
 ) {
     fun create(screenId: String, scope: CoroutineScope): ScreenEngine {
         val registry = actionRegistry ?: buildActionRegistry()
-        val variables = variableStore ?: VariableStoreImpl(scope = scope)
+        val sharedGlobal = (globalStore ?: Companion.sharedGlobalStore)
+        val localStore = variableStore ?: VariableStoreImpl(scope = scope, globalStore = sharedGlobal)
+        val variables = localStore
         val controller = DefaultScreenController(
             screenId = screenId,
             repository = repository,
@@ -162,5 +165,11 @@ class ScreenEngineFactory(
             logger = logger,
         )
         return ScreenEngine(controller, registry, variables, navigator, scope, logger)
+    }
+
+    private companion object {
+        val sharedGlobalStore: VariableStore by lazy {
+            VariableStoreImpl(scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Default))
+        }
     }
 }

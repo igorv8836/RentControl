@@ -15,7 +15,6 @@ import org.igorv8836.bdui.renderer.ScreenHost
 fun BduiScreen(
     screenId: String,
     provider: EngineProvider,
-    resolve: (String) -> String = { it },
     modifier: Modifier = Modifier,
 ) {
     val engine = androidx.compose.runtime.remember(screenId, provider) {
@@ -29,7 +28,6 @@ fun BduiScreen(
     ScreenHost(
         state = state,
         actionRegistry = engine.actionRegistry,
-        resolve = resolve,
         variableStore = engine.variableStore,
         navigator = engine.navigator,
         screenId = state.remoteScreen?.id ?: screenId,

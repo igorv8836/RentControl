@@ -19,9 +19,9 @@ fun buildDetailsScreen(offer: OfferDto): RemoteScreen = screen(id = "details/${o
             direction = ContainerDirection.Column,
             spacing = 12f,
         ) {
-            text(id = "details-title", textKey = offer.title)
-            text(id = "details-subtitle", textKey = offer.subtitle)
-            text(id = "details-description", textKey = offer.description)
+            text(id = "details-title", text = offer.title)
+            text(id = "details-subtitle", text = offer.subtitle)
+            text(id = "details-description", text = offer.description)
             container(
                 id = "details-actions",
                 direction = ContainerDirection.Row,
@@ -29,13 +29,13 @@ fun buildDetailsScreen(offer: OfferDto): RemoteScreen = screen(id = "details/${o
             ) {
                 button(
                     id = "details-home",
-                    titleKey = "Back to home",
+                    title = "Back to home",
                     actionId = toHome.id,
                     kind = ButtonKind.Secondary,
                 )
                 button(
                     id = "details-catalog",
-                    titleKey = "Open catalog",
+                    title = "Open catalog",
                     actionId = toCatalog.id,
                     kind = ButtonKind.Primary,
                 )

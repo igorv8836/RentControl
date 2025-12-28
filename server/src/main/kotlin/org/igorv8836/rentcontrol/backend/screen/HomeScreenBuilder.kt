@@ -1,7 +1,7 @@
 package org.igorv8836.rentcontrol.backend.screen
 
-import org.igorv8836.bdui.backend.dsl.bindText
 import org.igorv8836.bdui.backend.dsl.container
+import org.igorv8836.bdui.backend.dsl.incrementVariableAction
 import org.igorv8836.bdui.backend.dsl.screen
 import org.igorv8836.bdui.backend.dsl.setVariableAction
 import org.igorv8836.bdui.backend.dsl.variableChangedTrigger
@@ -10,7 +10,6 @@ import org.igorv8836.bdui.contract.ButtonKind
 import org.igorv8836.bdui.contract.Condition
 import org.igorv8836.bdui.contract.ContainerDirection
 import org.igorv8836.bdui.contract.ForwardAction
-import org.igorv8836.bdui.contract.MissingVariableBehavior
 import org.igorv8836.bdui.contract.NumberValue
 import org.igorv8836.bdui.contract.PaginationSettings
 import org.igorv8836.bdui.contract.PullToRefresh
@@ -32,10 +31,16 @@ fun buildHomeScreen(offers: List<OfferDto>): RemoteScreen = screen(id = "home", 
         value = StringValue("Guest"),
         scope = VariableScope.Global,
     )
-    val incVisits = setVariableAction(
+    val initVisits = setVariableAction(
+        id = "init-visits",
+        key = "visits",
+        value = NumberValue(0.0),
+        scope = VariableScope.Global,
+    )
+    val incVisits = incrementVariableAction(
         id = "inc-visits",
         key = "visits",
-        value = NumberValue(1.0),
+        delta = 1.0,
         scope = VariableScope.Global,
     )
     val triggerWelcome = variableChangedTrigger(
@@ -43,14 +48,15 @@ fun buildHomeScreen(offers: List<OfferDto>): RemoteScreen = screen(id = "home", 
         key = "user_name",
         actions = emptyList<Action>(),
         condition = Condition(
-            binding = bindText("user_name", missingBehavior = MissingVariableBehavior.Empty),
-            equals = StringValue(value = "Guest"),
+            key = "user_name",
+            equals = StringValue("Guest"),
         ),
     )
 
     val goCatalog = ForwardAction(id = "go-catalog", path = "catalog")
     val actions = buildList<Action> {
         add(setUser)
+        add(initVisits)
         add(incVisits)
         add(goCatalog)
         offers.forEach { offer ->
@@ -69,27 +75,17 @@ fun buildHomeScreen(offers: List<OfferDto>): RemoteScreen = screen(id = "home", 
     ) {
         text(
             id = "welcome-title",
-            textKey = "welcome",
-            template = "Welcome, {{user_name}}!",
-            binding = bindText(
-                "user_name",
-                missingBehavior = MissingVariableBehavior.Default,
-                default = StringValue("Guest"),
-            ),
+            text = "welcome",
+            template = "Welcome, @{user_name}!",
         )
         text(
             id = "visits",
-            textKey = "visits",
-            template = "Visits: {{visits}}",
-            binding = bindText(
-                "visits",
-                missingBehavior = MissingVariableBehavior.Default,
-                default = NumberValue(0.0),
-            ),
+            text = "visits",
+            template = "Visits: @{visits}",
         )
         button(
             id = "cta-catalog",
-            titleKey = "Open catalog",
+            title = "Open catalog",
             actionId = goCatalog.id,
             kind = ButtonKind.Primary,
         )
@@ -102,13 +98,13 @@ fun buildHomeScreen(offers: List<OfferDto>): RemoteScreen = screen(id = "home", 
     ) {
         button(
             id = "btn-refresh-user",
-            titleKey = "Refresh user",
+            title = "Refresh user",
             actionId = setUser.id,
             kind = ButtonKind.Secondary,
         )
         button(
             id = "btn-inc-visits",
-            titleKey = "Add visit",
+            title = "Add visit",
             actionId = incVisits.id,
             kind = ButtonKind.Primary,
         )
@@ -125,7 +121,7 @@ fun buildHomeScreen(offers: List<OfferDto>): RemoteScreen = screen(id = "home", 
             divider(id = "middle-divider")
             text(
                 id = "offers-title",
-                textKey = "offers",
+                text = "offers",
                 template = "Featured offers",
             )
             list(
@@ -135,8 +131,8 @@ fun buildHomeScreen(offers: List<OfferDto>): RemoteScreen = screen(id = "home", 
                 offers.forEach { offer ->
                     listItem(
                         id = "offer-${offer.id}",
-                        titleKey = offer.title,
-                        subtitleKey = offer.subtitle,
+                        title = offer.title,
+                        subtitle = offer.subtitle,
                         actionId = "open-${offer.id}",
                     )
                 }

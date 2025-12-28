@@ -34,10 +34,9 @@ enum class ContainerDirection {
 
 data class TextElement(
     override val id: String,
-    val textKey: String,
+    val text: String,
     val style: TextStyle = TextStyle.Body,
     val semantics: Semantics? = null,
-    val binding: Binding? = null,
     val template: String? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode
@@ -51,12 +50,11 @@ enum class TextStyle {
 
 data class ButtonElement(
     override val id: String,
-    val titleKey: String,
+    val title: String,
     val actionId: String,
     val kind: ButtonKind = ButtonKind.Primary,
     val isEnabled: Boolean = true,
     val semantics: Semantics? = null,
-    val titleBinding: Binding? = null,
     val enabledIf: Condition? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode
@@ -98,12 +96,10 @@ data class DividerElement(
 
 data class ListItemElement(
     override val id: String,
-    val titleKey: String,
-    val subtitleKey: String? = null,
+    val title: String,
+    val subtitle: String? = null,
     val actionId: String? = null,
     val semantics: Semantics? = null,
-    val titleBinding: Binding? = null,
-    val subtitleBinding: Binding? = null,
     val enabledIf: Condition? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode

@@ -42,7 +42,7 @@ class ScreenEngineIntegrationTest {
         val screen = RemoteScreen(
             id = "home",
             version = 1,
-            layout = Layout(root = TextElement(id = "t1", textKey = "hello")),
+            layout = Layout(root = TextElement(id = "t1", text = "hello")),
             actions = listOf(LifecycleAction()),
             lifecycle = ScreenLifecycle(
                 onOpen = listOf(UiEvent(actions = listOf(LifecycleAction("life")), id = "")),

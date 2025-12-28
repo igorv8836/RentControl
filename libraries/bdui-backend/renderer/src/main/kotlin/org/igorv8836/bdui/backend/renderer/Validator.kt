@@ -72,11 +72,7 @@ fun validateScreen(remoteScreen: RemoteScreen, limits: LimitConfig): List<Valida
                     }
                 }
             }
-            is ListItemElement -> {
-                node.subtitleBinding?.let { _ ->
-                    // no-op validation yet; placeholder for future checks
-                }
-            }
+            is ListItemElement -> Unit
             is DividerElement -> Unit
             is LazyListElement -> Unit
             else -> Unit

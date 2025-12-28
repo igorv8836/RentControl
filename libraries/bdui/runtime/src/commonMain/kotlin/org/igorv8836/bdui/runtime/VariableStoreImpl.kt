@@ -57,6 +57,7 @@ class VariableStoreImpl(
     private val syncIntervalMs: Long = 60_000,
     private val enableSync: Boolean = true,
     private val scope: CoroutineScope,
+    private val globalStore: VariableStore? = null,
 ) : VariableStore {
     private val globalMemory: MutableMap<String, StoredVariable> = mutableMapOf()
     private val screenMemory: MutableMap<String, MutableMap<String, StoredVariable>> = mutableMapOf()
@@ -87,9 +88,12 @@ class VariableStoreImpl(
         peek(key, scope, screenId)
 
     override fun peek(key: String, scope: VariableScope, screenId: String?): VariableValue? {
+        if (scope == VariableScope.Global && globalStore != null && globalStore !== this) {
+            return globalStore.peek(key, scope, screenId)
+        }
         evictExpired(scope, screenId)
-        val stored = memoryFor(scope, screenId)[key] ?: return null
-        return stored.value
+        val stored = memoryFor(scope, screenId)[key]
+        return stored?.value
     }
 
     override suspend fun set(
@@ -102,6 +106,11 @@ class VariableStoreImpl(
     ) {
         validateSize(value)
         val now = currentTimeMillis()
+        if (scope == VariableScope.Global && globalStore != null && globalStore !== this) {
+            globalStore.set(key, value, scope, screenId, policy, ttlMillis)
+            return
+        }
+
         val stored = StoredVariable(
             key = key,
             scope = scope,
@@ -124,6 +133,11 @@ class VariableStoreImpl(
         screenId: String?,
         policy: StoragePolicy,
     ) {
+        if (scope == VariableScope.Global && globalStore != null && globalStore !== this) {
+            globalStore.increment(key, delta, scope, screenId, policy)
+            return
+        }
+
         val current = get(key, scope, screenId)
         val newValue = when (current) {
             is VariableValue.NumberValue -> current.value + delta
@@ -134,13 +148,21 @@ class VariableStoreImpl(
     }
 
     override suspend fun remove(key: String, scope: VariableScope, screenId: String?) {
-        memoryFor(scope, screenId).remove(key)
-        persistent.remove(key, scope, screenId)
-        notifyChanged()
+        if (scope == VariableScope.Global && globalStore != null && globalStore !== this) {
+            globalStore.remove(key, scope, screenId)
+        } else {
+            memoryFor(scope, screenId).remove(key)
+            persistent.remove(key, scope, screenId)
+            notifyChanged()
+        }
     }
 
     override suspend fun syncFromPersistent(screenId: String?) {
-        syncScope(VariableScope.Global, screenId)
+        if (globalStore != null && globalStore !== this) {
+            globalStore.syncFromPersistent(null)
+        } else {
+            syncScope(VariableScope.Global, screenId)
+        }
         syncScope(VariableScope.Screen, screenId)
     }
 

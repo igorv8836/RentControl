@@ -17,7 +17,7 @@ class SchemaPrinter {
     private fun render(node: ComponentNode, indent: Int): String {
         val prefix = "  ".repeat(indent)
         val line = when (node) {
-            is TextElement -> "$prefix- text(${node.id}) key=${node.textKey}"
+            is TextElement -> "$prefix- text(${node.id}) text=${node.text}"
             is ButtonElement -> "$prefix- button(${node.id}) action=${node.actionId}"
             is Container -> {
                 val containerLine = "$prefix- container(${node.id}) dir=${node.direction}"

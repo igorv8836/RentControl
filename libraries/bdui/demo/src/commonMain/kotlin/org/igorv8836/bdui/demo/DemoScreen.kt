@@ -23,7 +23,6 @@ fun DemoScreen(
     BduiScreen(
         screenId = "home",
         provider = provider,
-        resolve = { it },
         modifier = modifier,
     )
 }

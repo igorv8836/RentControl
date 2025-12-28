@@ -5,7 +5,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.igorv8836.bdui.actions.navigation.ForwardAction
 import org.igorv8836.bdui.contract.Action
-import org.igorv8836.bdui.contract.Binding
 import org.igorv8836.bdui.contract.ButtonElement
 import org.igorv8836.bdui.contract.ButtonKind
 import org.igorv8836.bdui.contract.Condition
@@ -71,10 +70,10 @@ object Fixtures {
                     id = "root",
                     direction = ContainerDirection.Column,
                     children = listOf(
-                        TextElement(id = "title", textKey = "title"),
+                        TextElement(id = "title", text = "title"),
                         ButtonElement(
                             id = "cta",
-                            titleKey = "cta",
+                            title = "cta",
                             actionId = action.id,
                             kind = ButtonKind.Primary,
                         ),
