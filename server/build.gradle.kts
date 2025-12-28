@@ -25,7 +25,7 @@ dependencies {
     implementation(projects.libraries.bduiBackend.renderer)
     implementation(projects.libraries.bduiBackend.data)
     implementation(projects.libraries.bduiBackend.runtime)
-    implementation(projects.server.bduiContract)
+    implementation(projects.libraries.bduiBackend.contract)
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.2")
     implementation(libs.logback)
     implementation(libs.ktor.serverCore)

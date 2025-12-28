@@ -9,6 +9,6 @@ kotlin {
 dependencies {
     implementation(projects.libraries.bduiBackend.core)
     implementation(projects.libraries.bduiBackend.dsl)
-    implementation(projects.server.bduiContract)
+    implementation(projects.libraries.bduiBackend.contract)
     testImplementation(libs.kotlin.test)
 }

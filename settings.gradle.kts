@@ -44,6 +44,7 @@ include(
     ":libraries:bdui:actions",
     ":libraries:bdui:testing",
     ":libraries:bdui:core",
+    ":libraries:bdui-backend:contract",
     ":libraries:bdui-backend:core",
     ":libraries:bdui-backend:dsl",
     ":libraries:bdui-backend:mapper",
@@ -57,5 +58,4 @@ include(
     ":libraries:bdui:navigation",
     ":libraries:bdui:engine",
     ":libraries:bdui:logger",
-    ":server:bdui-contract",
 )
