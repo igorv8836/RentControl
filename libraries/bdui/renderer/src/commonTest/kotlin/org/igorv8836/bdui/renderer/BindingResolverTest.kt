@@ -5,6 +5,7 @@ import org.igorv8836.bdui.contract.StoragePolicy
 import org.igorv8836.bdui.contract.VariableScope
 import org.igorv8836.bdui.contract.VariableValue
 import org.igorv8836.bdui.core.variables.VariableStore
+import org.igorv8836.bdui.renderer.binding.BindingResolver
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -27,12 +28,10 @@ private class MapVariableStore(
 
 class BindingResolverTest {
 
-    private val translate: (String) -> String = { it }
-
     @Test
     fun resolvesTemplatePlaceholder() {
         val store = MapVariableStore(mutableMapOf("greet" to VariableValue.StringValue("Hello")))
-        val resolver = BindingResolver(store, "screen", translate)
+        val resolver = BindingResolver(store, "screen")
 
         val result = resolver.text(
             key = null,
@@ -45,7 +44,7 @@ class BindingResolverTest {
     @Test
     fun interpolatesTemplateWithVariables() {
         val store = MapVariableStore(mutableMapOf("user" to VariableValue.StringValue("Guest")))
-        val resolver = BindingResolver(store, "screen", translate)
+        val resolver = BindingResolver(store, "screen")
 
         val result = resolver.text(key = "welcome", template = "Welcome, @{ user }!")
 
@@ -55,7 +54,7 @@ class BindingResolverTest {
     @Test
     fun visibleWhenConditionMatches() {
         val store = MapVariableStore(mutableMapOf("flag" to VariableValue.BoolValue(true)))
-        val resolver = BindingResolver(store, "screen", translate)
+        val resolver = BindingResolver(store, "screen")
         val condition = Condition(key = "flag", equals = VariableValue.BoolValue(true))
 
         assertTrue(resolver.isVisible(condition))
@@ -64,7 +63,7 @@ class BindingResolverTest {
     @Test
     fun notVisibleWhenConditionMissingAndExistsRequired() {
         val store = MapVariableStore()
-        val resolver = BindingResolver(store, "screen", translate)
+        val resolver = BindingResolver(store, "screen")
         val condition = Condition(key = "unknown")
 
         assertFalse(resolver.isVisible(condition))
@@ -73,7 +72,7 @@ class BindingResolverTest {
     @Test
     fun isEnabledRespectsBaseFlag() {
         val store = MapVariableStore()
-        val resolver = BindingResolver(store, "screen", translate)
+        val resolver = BindingResolver(store, "screen")
 
         assertFalse(resolver.isEnabled(base = false, condition = null))
     }
@@ -81,7 +80,7 @@ class BindingResolverTest {
     @Test
     fun missingVariableReturnsEmptyString() {
         val store = MapVariableStore()
-        val resolver = BindingResolver(store, "screen", translate)
+        val resolver = BindingResolver(store, "screen")
 
         val text = resolver.text(key = null, template = "Hi @{absent}")
 

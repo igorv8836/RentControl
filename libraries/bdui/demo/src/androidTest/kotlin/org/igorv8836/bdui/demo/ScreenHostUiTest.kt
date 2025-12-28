@@ -18,13 +18,13 @@ import org.igorv8836.bdui.contract.ContainerDirection
 import org.igorv8836.bdui.contract.VariableValue
 import org.igorv8836.bdui.actions.variables.SetVariableAction
 import org.igorv8836.bdui.contract.VariableScope
-import org.igorv8836.bdui.core.navigation.Navigator
 import org.igorv8836.bdui.engine.ScreenEngineFactory
-import org.igorv8836.bdui.renderer.ScreenHost
+import org.igorv8836.bdui.renderer.host.ScreenHost
 import org.igorv8836.bdui.runtime.ScreenRepository
 import org.igorv8836.bdui.runtime.ScreenState
 import org.igorv8836.bdui.runtime.ScreenStatus
 import org.igorv8836.bdui.runtime.VariableStoreImpl
+import org.igorv8836.bdui.testing.TestNavigator
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -46,7 +46,7 @@ class ScreenHostUiTest {
                 override suspend fun fetch(screenId: String, params: Map<String, String>): Result<RemoteScreen> =
                     Result.success(screen)
             },
-            navigator = NoopNavigator,
+            navigator = TestNavigator,
             variableStore = VariableStoreImpl(scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)),
         ).create("home", CoroutineScope(SupervisorJob() + Dispatchers.Main))
 
@@ -58,7 +58,7 @@ class ScreenHostUiTest {
                 state = ScreenState(remoteScreen = screen, status = ScreenStatus.Ready, empty = false),
                 actionRegistry = engine.actionRegistry,
                 variableStore = engine.variableStore,
-                navigator = NoopNavigator,
+                navigator = TestNavigator,
             )
         }
 
@@ -104,7 +104,7 @@ class ScreenHostUiTest {
                 override suspend fun fetch(screenId: String, params: Map<String, String>): Result<RemoteScreen> =
                     Result.success(screen)
             },
-            navigator = NoopNavigator,
+            navigator = TestNavigator,
             variableStore = VariableStoreImpl(scope = scope),
         ).create("home", scope)
 
@@ -115,7 +115,7 @@ class ScreenHostUiTest {
                 state = ScreenState(remoteScreen = screen, status = ScreenStatus.Ready, empty = false),
                 actionRegistry = engine.actionRegistry,
                 variableStore = engine.variableStore,
-                navigator = NoopNavigator,
+                navigator = TestNavigator,
             )
         }
 
@@ -126,11 +126,4 @@ class ScreenHostUiTest {
         val stored = engine.variableStore.peek("name", VariableScope.Global, null) as VariableValue.StringValue
         assertEquals("Tester", stored.value)
     }
-}
-
-private object NoopNavigator : Navigator {
-    override fun openRoute(route: org.igorv8836.bdui.contract.Route, parameters: Map<String, String>) {}
-    override fun forward(path: String?, remoteScreen: org.igorv8836.bdui.contract.RemoteScreen?, parameters: Map<String, String>) {}
-    override fun showPopup(popup: org.igorv8836.bdui.contract.Popup, parameters: Map<String, String>) {}
-    override fun showOverlay(overlay: org.igorv8836.bdui.contract.Overlay, parameters: Map<String, String>) {}
 }

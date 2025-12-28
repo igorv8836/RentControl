@@ -5,7 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import org.igorv8836.bdui.renderer.ScreenHost
+import org.igorv8836.bdui.renderer.host.ScreenHost
 
 /**
  * Turnkey composable that wires [ScreenEngine] to [ScreenHost].

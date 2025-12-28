@@ -13,6 +13,8 @@ import org.igorv8836.bdui.contract.Semantics
 import org.igorv8836.bdui.contract.SpacerElement
 import org.igorv8836.bdui.contract.TextElement
 import org.igorv8836.bdui.contract.TextStyle
+import org.igorv8836.bdui.contract.BottomBar
+import org.igorv8836.bdui.contract.BottomTab
 
 /**
  * Container builder scope for nested layout declarations.
@@ -143,6 +145,39 @@ class ContainerScope {
         enabledIf = enabledIf,
         visibleIf = visibleIf,
     ).also { children += it }
+
+    fun bottomBar(selectedTabId: String? = null, block: BottomBarBuilder.() -> Unit): BottomBar {
+        val builder = BottomBarBuilder(selectedTabId)
+        builder.block()
+        return builder.build()
+    }
+}
+
+class BottomBarBuilder(private val selected: String?) {
+    private val tabs = mutableListOf<BottomTab>()
+
+    fun tab(
+        id: String,
+        title: String,
+        actionId: String,
+        iconUrl: String? = null,
+        badge: String? = null,
+        visibleIf: org.igorv8836.bdui.contract.Condition? = null,
+    ) {
+        tabs += BottomTab(
+            id = id,
+            title = title,
+            actionId = actionId,
+            iconUrl = iconUrl,
+            badge = badge,
+            visibleIf = visibleIf,
+        )
+    }
+
+    fun build(): BottomBar = BottomBar(
+        tabs = tabs.toList(),
+        selectedTabId = selected,
+    )
 }
 
 /**

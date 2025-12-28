@@ -20,6 +20,23 @@ data class Layout(
 data class Scaffold(
     val top: ComponentNode? = null,
     val bottom: ComponentNode? = null,
+    val bottomBar: BottomBar? = null,
+)
+
+data class BottomBar(
+    val tabs: List<BottomTab>,
+    val selectedTabId: String? = null,
+)
+
+data class BottomTab(
+    val id: String,
+    val title: String,
+    val actionId: String,
+    val iconUrl: String? = null,
+    val badge: String? = null,
+    val label: ComponentNode? = null,
+    val icon: ComponentNode? = null,
+    val visibleIf: Condition? = null,
 )
 
 data class Theme(

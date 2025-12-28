@@ -9,9 +9,9 @@ import org.igorv8836.bdui.contract.RemoteScreen
 import org.igorv8836.rentcontrol.backend.model.OfferDto
 
 fun buildDetailsScreen(offer: OfferDto): RemoteScreen = screen(id = "details/${offer.id}", version = 1) {
-    val toCatalog = ForwardAction(id = "details-back-catalog", path = "catalog")
-    val toHome = ForwardAction(id = "details-back-home", path = "home")
-    actions(toCatalog, toHome)
+    val goCatalog = ForwardAction(id = "go-catalog", path = "catalog")
+    val goHome = ForwardAction(id = "go-home", path = "home")
+    actions(goCatalog, goHome)
 
     layout(
         container(
@@ -30,16 +30,22 @@ fun buildDetailsScreen(offer: OfferDto): RemoteScreen = screen(id = "details/${o
                 button(
                     id = "details-home",
                     title = "Back to home",
-                    actionId = toHome.id,
+                    actionId = goHome.id,
                     kind = ButtonKind.Secondary,
                 )
                 button(
                     id = "details-catalog",
                     title = "Open catalog",
-                    actionId = toCatalog.id,
+                    actionId = goCatalog.id,
                     kind = ButtonKind.Primary,
                 )
             }
         },
     )
+
+    val bottomBar = org.igorv8836.bdui.backend.dsl.ContainerScope().bottomBar(selectedTabId = "catalog-tab") {
+        tab(id = "home-tab", title = "Home", actionId = goHome.id)
+        tab(id = "catalog-tab", title = "Catalog", actionId = goCatalog.id)
+    }
+    scaffold(bottomBar = bottomBar)
 }

@@ -34,6 +34,7 @@ kotlin {
         }
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
+            implementation(projects.libraries.bdui.testing)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

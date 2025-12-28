@@ -53,11 +53,13 @@ fun buildHomeScreen(offers: List<OfferDto>): RemoteScreen = screen(id = "home", 
         ),
     )
 
+    val goHome = ForwardAction(id = "go-home", path = "home")
     val goCatalog = ForwardAction(id = "go-catalog", path = "catalog")
     val actions = buildList<Action> {
         add(setUser)
         add(initVisits)
         add(incVisits)
+        add(goHome)
         add(goCatalog)
         offers.forEach { offer ->
             add(ForwardAction(id = "open-${offer.id}", path = "details/${offer.id}"))
@@ -110,7 +112,12 @@ fun buildHomeScreen(offers: List<OfferDto>): RemoteScreen = screen(id = "home", 
         )
     }
 
-    scaffold(top = header, bottom = footer)
+    val bottomBar = org.igorv8836.bdui.backend.dsl.ContainerScope().bottomBar(selectedTabId = "home-tab") {
+        tab(id = "home-tab", title = "Home", actionId = goHome.id)
+        tab(id = "catalog-tab", title = "Catalog", actionId = goCatalog.id)
+    }
+
+    scaffold(top = header, bottom = footer, bottomBar = bottomBar)
 
     layout(
         container(

@@ -44,8 +44,8 @@ class ScreenBuilder(
         this.root = root
     }
 
-    fun scaffold(top: ComponentNode? = null, bottom: ComponentNode? = null) {
-        this.scaffold = Scaffold(top = top, bottom = bottom)
+    fun scaffold(top: ComponentNode? = null, bottom: ComponentNode? = null, bottomBar: org.igorv8836.bdui.contract.BottomBar? = null) {
+        this.scaffold = Scaffold(top = top, bottom = bottom, bottomBar = bottomBar)
     }
 
     fun settings(
