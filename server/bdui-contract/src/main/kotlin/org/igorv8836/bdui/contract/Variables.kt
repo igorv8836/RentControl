@@ -1,5 +1,8 @@
 package org.igorv8836.bdui.contract
 
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+
 enum class VariableScope {
     Global,
     Screen,
@@ -10,12 +13,19 @@ enum class StoragePolicy {
     Persistent,
 }
 
-sealed interface VariableValue {
-    data class StringValue(val value: String) : VariableValue
-    data class NumberValue(val value: Double) : VariableValue
-    data class BoolValue(val value: Boolean) : VariableValue
-    data class ObjectValue(val value: Map<String, VariableValue>) : VariableValue
-}
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonSubTypes(
+    JsonSubTypes.Type(value = StringValue::class),
+    JsonSubTypes.Type(value = NumberValue::class),
+    JsonSubTypes.Type(value = BoolValue::class),
+    JsonSubTypes.Type(value = ObjectValue::class),
+)
+sealed interface VariableValue
+
+data class StringValue(val value: String) : VariableValue
+data class NumberValue(val value: Double) : VariableValue
+data class BoolValue(val value: Boolean) : VariableValue
+data class ObjectValue(val value: Map<String, VariableValue>) : VariableValue
 
 enum class MissingVariableBehavior {
     Empty,

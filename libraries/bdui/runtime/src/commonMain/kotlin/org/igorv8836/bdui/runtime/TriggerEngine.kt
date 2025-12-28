@@ -2,14 +2,8 @@ package org.igorv8836.bdui.runtime
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import org.igorv8836.bdui.actions.ActionContext
-import org.igorv8836.bdui.actions.ActionRegistry
-import org.igorv8836.bdui.actions.Navigator
-import org.igorv8836.bdui.actions.Router
-import org.igorv8836.bdui.actions.VariableAdapter
+import org.igorv8836.bdui.contract.Binding
 import org.igorv8836.bdui.contract.Condition
 import org.igorv8836.bdui.contract.MissingVariableBehavior
 import org.igorv8836.bdui.contract.ScreenEventType
@@ -17,16 +11,13 @@ import org.igorv8836.bdui.contract.Trigger
 import org.igorv8836.bdui.contract.TriggerSource
 import org.igorv8836.bdui.contract.VariableScope
 import org.igorv8836.bdui.contract.VariableValue
-import org.igorv8836.bdui.contract.Binding
+import org.igorv8836.bdui.core.context.ActionContext
+import org.igorv8836.bdui.core.variables.VariableStore
 
 class TriggerEngine(
     private val screenId: String,
     private val variableStore: VariableStore,
-    private val variableAdapter: VariableAdapter,
-    private val actionRegistry: ActionRegistry,
-    private val router: Router,
-    private val analytics: (String, Map<String, String>) -> Unit = { _, _ -> },
-    private val navigator: Navigator? = null,
+    private val actionContext: ActionContext,
     externalScope: CoroutineScope,
 ) {
     private val job = SupervisorJob()
@@ -88,15 +79,9 @@ class TriggerEngine(
         g.executions += 1
         g.lastRunMs = now
         trigger.actions.forEach { action ->
-            actionRegistry.dispatch(
-                action,
-                ActionContext(
-                    router = router,
-                    analytics = analytics,
-                    navigator = navigator,
-                    variables = variableAdapter,
-                    screenId = screenId,
-                ),
+            actionContext.screenContext.actionRegistry.dispatch(
+                action = action,
+                context = actionContext,
             )
         }
     }
@@ -108,7 +93,7 @@ class TriggerEngine(
         if (!exists) {
             return !condition.exists
         }
-        var result = condition.equals?.let { compareValues(value!!, it) } ?: isTruthy(value!!)
+        var result = condition.equals?.let { compareValues(value, it) } ?: isTruthy(value)
         if (condition.negate) result = !result
         return result
     }

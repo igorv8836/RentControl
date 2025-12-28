@@ -1,17 +1,17 @@
 package org.igorv8836.bdui.demo
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.CoroutineScope
-import org.igorv8836.bdui.cache.config.CachePolicy
-import org.igorv8836.bdui.network.BduiClient
-import org.igorv8836.bdui.network.BduiClientConfig
-import org.igorv8836.bdui.renderer.ScreenHost
+import org.igorv8836.bdui.engine.EngineConfig
+import org.igorv8836.bdui.engine.EngineProvider
+import org.igorv8836.bdui.engine.BduiScreen
 
 @Composable
 fun DemoScreen(
@@ -19,41 +19,25 @@ fun DemoScreen(
     baseUrl: String = defaultBaseUrl(),
 ) {
     val scope = rememberCoroutineScope()
-    val client = rememberClient(scope, baseUrl)
-    val state by client.store.state.collectAsState()
-
-    LaunchedEffect(baseUrl) {
-        client.load("/home")
-    }
-
-    ScreenHost(
-        state = state,
-        router = client.router,
-        actionRegistry = client.actionRegistry,
+    val provider = rememberEngineProvider(scope, baseUrl)
+    BduiScreen(
+        screenId = "home",
+        provider = provider,
         resolve = { it },
-        variableStore = client.variables,
-        screenId = state.remoteScreen?.id,
-        analytics = client.config.analytics,
-        onRefresh = { client.refresh() },
-        onLoadNextPage = {
-            val pagination = state.remoteScreen?.settings?.pagination
-            client.loadNextPage(settings = pagination)
-        },
         modifier = modifier,
     )
 }
 
 @Composable
-private fun rememberClient(
+private fun rememberEngineProvider(
     scope: CoroutineScope,
     baseUrl: String,
-): BduiClient {
+): EngineProvider {
     return remember(baseUrl) {
-        BduiClient(
+        EngineProvider(
             scope = scope,
-            config = BduiClientConfig(
+            config = EngineConfig(
                 baseUrl = baseUrl.trimEnd('/'),
-                cachePolicy = CachePolicy(enabled = true, ttlMillis = 60_000),
             ),
         )
     }

@@ -21,55 +21,53 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import org.igorv8836.bdui.actions.VariableAdapter
-import org.igorv8836.bdui.actions.ActionContext
-import org.igorv8836.bdui.actions.ActionRegistry
-import org.igorv8836.bdui.actions.Router
 import org.igorv8836.bdui.components.ButtonComponent
 import org.igorv8836.bdui.components.ContainerComponent
 import org.igorv8836.bdui.components.DividerComponent
 import org.igorv8836.bdui.components.ImagePlaceholder
-import org.igorv8836.bdui.components.ListItemComponent
 import org.igorv8836.bdui.components.LazyListComponent
+import org.igorv8836.bdui.components.ListItemComponent
 import org.igorv8836.bdui.components.SpacerComponent
 import org.igorv8836.bdui.components.TextComponent
+import org.igorv8836.bdui.contract.Binding
 import org.igorv8836.bdui.contract.ButtonElement
 import org.igorv8836.bdui.contract.ComponentNode
+import org.igorv8836.bdui.contract.Condition
 import org.igorv8836.bdui.contract.Container
 import org.igorv8836.bdui.contract.DividerElement
 import org.igorv8836.bdui.contract.ImageElement
 import org.igorv8836.bdui.contract.LazyListElement
 import org.igorv8836.bdui.contract.ListItemElement
-import org.igorv8836.bdui.contract.SpacerElement
-import org.igorv8836.bdui.contract.RemoteScreen
-import org.igorv8836.bdui.contract.TextElement
-import org.igorv8836.bdui.runtime.ScreenState
-import org.igorv8836.bdui.runtime.ScreenStatus
-import org.igorv8836.bdui.runtime.VariableStore
-import org.igorv8836.bdui.contract.Binding
-import org.igorv8836.bdui.contract.Condition
 import org.igorv8836.bdui.contract.MissingVariableBehavior
+import org.igorv8836.bdui.contract.RemoteScreen
+import org.igorv8836.bdui.contract.SpacerElement
+import org.igorv8836.bdui.contract.TextElement
 import org.igorv8836.bdui.contract.VariableScope
 import org.igorv8836.bdui.contract.VariableValue
-import org.igorv8836.bdui.contract.StoragePolicy
+import org.igorv8836.bdui.core.actions.ActionRegistry
+import org.igorv8836.bdui.core.context.ActionContext
+import org.igorv8836.bdui.core.context.ScreenContext
+import org.igorv8836.bdui.core.navigation.Navigator
+import org.igorv8836.bdui.core.variables.VariableStore
+import org.igorv8836.bdui.runtime.ScreenState
+import org.igorv8836.bdui.runtime.ScreenStatus
 
 @Composable
 fun ScreenHost(
     state: ScreenState,
-    router: Router,
     actionRegistry: ActionRegistry,
     resolve: (String) -> String,
-    variableStore: VariableStore? = null,
+    variableStore: VariableStore,
+    navigator: Navigator,
     screenId: String? = null,
     modifier: Modifier = Modifier,
-    analytics: (String, Map<String, String>) -> Unit = { _, _ -> },
     onRefresh: (() -> Unit)? = null,
     onLoadNextPage: (() -> Unit)? = null,
     onAppear: (() -> Unit)? = null,
@@ -77,42 +75,13 @@ fun ScreenHost(
     onDisappear: (() -> Unit)? = null,
 ) {
     val scope = rememberCoroutineScope()
-    val variables = remember(variableStore) { variableStore ?: VariableStore(scope = scope) }
+    val variables = remember(variableStore) { variableStore }
     val variablesVersion by variables.changes.collectAsState()
+    val screenContext = remember(variables, actionRegistry) {
+        ScreenContext(variableStore = variables, actionRegistry = actionRegistry)
+    }
     val appeared = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     val fullyVisible = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
-
-    val variableAdapter = remember(variables) {
-        object : VariableAdapter {
-            override fun peek(key: String, scope: VariableScope, screenId: String?): VariableValue? =
-                variables.peek(key, scope, screenId)
-
-            override suspend fun set(
-                key: String,
-                value: VariableValue,
-                scope: VariableScope,
-                screenId: String?,
-                policy: StoragePolicy,
-                ttlMillis: Long?,
-            ) {
-                variables.set(key, value, scope, screenId, policy, ttlMillis)
-            }
-
-            override suspend fun increment(
-                key: String,
-                delta: Double,
-                scope: VariableScope,
-                screenId: String?,
-                policy: StoragePolicy,
-            ) {
-                variables.increment(key, delta, scope, screenId, policy)
-            }
-
-            override suspend fun remove(key: String, scope: VariableScope, screenId: String?) {
-                variables.remove(key, scope, screenId)
-            }
-        }
-    }
 
     val dispatch = { actionId: String, remoteScreen: RemoteScreen ->
         val action = remoteScreen.actions.firstOrNull { it.id == actionId }
@@ -121,10 +90,9 @@ fun ScreenHost(
                 actionRegistry.dispatch(
                     action = action,
                     context = ActionContext(
-                        router = router,
-                        analytics = analytics,
-                        variables = variableAdapter,
-                        screenId = screenId,
+                        navigator = navigator,
+                        screenContext = screenContext,
+                        screenId = screenId ?: remoteScreen.id,
                     ),
                 )
             }
@@ -225,7 +193,9 @@ private fun RenderScreen(
 
     val content: @Composable BoxScope.() -> Unit = {
         if (hasLazyList) {
-            Column(modifier = contentModifier) {
+            Column(
+                modifier = contentModifier.fillMaxSize(),
+            ) {
                 scaffold?.top?.let {
                     RenderNode(
                         node = it,
@@ -237,6 +207,7 @@ private fun RenderScreen(
                 }
                 Box(
                     modifier = Modifier
+                        .weight(1f, fill = true)
                         .fillMaxWidth(),
                 ) {
                     RenderNode(
@@ -342,7 +313,7 @@ private class BindingResolver(
         if (!exists) {
             return !condition.exists
         }
-        var result = condition.equals?.let { equalsValue(value!!, it) } ?: isTruthy(value!!)
+        var result = condition.equals?.let { equalsValue(value, it) } ?: isTruthy(value)
         if (condition.negate) result = !result
         return result
     }
@@ -372,7 +343,7 @@ private class BindingResolver(
         return regex.replace(template) { match ->
             val key = match.groupValues.getOrNull(1)?.trim().orEmpty()
             val resolved = variables.peek(key, VariableScope.Global, screenId)
-            resolved?.let { valueToString(it) } ?: ""
+            resolved?.let { valueToString(it) } ?: match.value
         }
     }
 

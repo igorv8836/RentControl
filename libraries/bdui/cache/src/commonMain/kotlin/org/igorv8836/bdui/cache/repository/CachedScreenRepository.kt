@@ -5,7 +5,7 @@ import org.igorv8836.bdui.cache.config.CachePolicy
 import org.igorv8836.bdui.cache.store.CachedScreenEntry
 import org.igorv8836.bdui.cache.store.MemoryScreenCacheStore
 import org.igorv8836.bdui.cache.store.ScreenCacheStore
-import org.igorv8836.bdui.common.time.currentTimeMillis
+import org.igorv8836.bdui.core.time.currentTimeMillis
 import org.igorv8836.bdui.runtime.ScreenRepository
 import org.igorv8836.bdui.contract.RemoteScreen
 

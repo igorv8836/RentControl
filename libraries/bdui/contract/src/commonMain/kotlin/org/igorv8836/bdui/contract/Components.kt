@@ -9,7 +9,7 @@ sealed interface ComponentNode {
 }
 
 @Serializable
-@SerialName("container")
+@SerialName("Container")
 data class Container(
     override val id: String,
     val direction: ContainerDirection,
@@ -26,7 +26,7 @@ enum class ContainerDirection {
 }
 
 @Serializable
-@SerialName("text")
+@SerialName("TextElement")
 data class TextElement(
     override val id: String,
     val textKey: String,
@@ -46,7 +46,7 @@ enum class TextStyle {
 }
 
 @Serializable
-@SerialName("button")
+@SerialName("ButtonElement")
 data class ButtonElement(
     override val id: String,
     val titleKey: String,
@@ -67,7 +67,7 @@ enum class ButtonKind {
 }
 
 @Serializable
-@SerialName("image")
+@SerialName("ImageElement")
 data class ImageElement(
     override val id: String,
     val url: String,
@@ -76,7 +76,7 @@ data class ImageElement(
 ) : ComponentNode
 
 @Serializable
-@SerialName("lazyList")
+@SerialName("LazyListElement")
 data class LazyListElement(
     override val id: String,
     val items: List<ComponentNode>,
@@ -85,7 +85,7 @@ data class LazyListElement(
 ) : ComponentNode
 
 @Serializable
-@SerialName("spacer")
+@SerialName("SpacerElement")
 data class SpacerElement(
     override val id: String,
     val width: Float? = null,
@@ -94,7 +94,7 @@ data class SpacerElement(
 ) : ComponentNode
 
 @Serializable
-@SerialName("divider")
+@SerialName("DividerElement")
 data class DividerElement(
     override val id: String,
     val thickness: Float? = null,
@@ -104,7 +104,7 @@ data class DividerElement(
 ) : ComponentNode
 
 @Serializable
-@SerialName("listItem")
+@SerialName("ListItemElement")
 data class ListItemElement(
     override val id: String,
     val titleKey: String,

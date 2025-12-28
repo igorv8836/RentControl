@@ -3,7 +3,7 @@ package org.igorv8836.bdui.testing
 import kotlinx.coroutines.delay
 import org.igorv8836.bdui.contract.ButtonElement
 import org.igorv8836.bdui.contract.ButtonKind
-import org.igorv8836.bdui.contract.ForwardAction
+import org.igorv8836.bdui.actions.navigation.ForwardAction
 import org.igorv8836.bdui.contract.Container
 import org.igorv8836.bdui.contract.Layout
 import org.igorv8836.bdui.contract.RemoteScreen

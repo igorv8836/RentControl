@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.kotlinxSerialization)
 }
 
 kotlin {
@@ -18,7 +19,11 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            implementation(libs.kotlinx.serialization.core)
+            implementation(libs.kotlinx.serialization.json)
+
             api(projects.libraries.bdui.contract)
+            api(projects.libraries.bdui.core)
             implementation(libs.kotlinx.coroutines.core)
         }
         commonTest.dependencies {

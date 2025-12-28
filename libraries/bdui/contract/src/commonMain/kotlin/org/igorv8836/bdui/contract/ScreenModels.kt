@@ -1,5 +1,6 @@
 package org.igorv8836.bdui.contract
 
+import kotlinx.serialization.Polymorphic
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -7,7 +8,7 @@ data class RemoteScreen(
     val id: String,
     val version: Int,
     val layout: Layout,
-    val actions: List<Action> = emptyList(),
+    val actions: List<@Polymorphic Action> = emptyList(),
     val triggers: List<Trigger> = emptyList(),
     val theme: Theme? = null,
     val settings: ScreenSettings = ScreenSettings(),

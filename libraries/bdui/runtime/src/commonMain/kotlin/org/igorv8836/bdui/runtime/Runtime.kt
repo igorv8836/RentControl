@@ -5,6 +5,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.igorv8836.bdui.logger.ConsoleLogger
+import org.igorv8836.bdui.logger.Logger
+import org.igorv8836.bdui.logger.LogMessages
+import org.igorv8836.bdui.logger.LogTags
+import org.igorv8836.bdui.logger.formatLog
 import org.igorv8836.bdui.contract.Container
 import org.igorv8836.bdui.contract.LazyListElement
 import org.igorv8836.bdui.contract.RemoteScreen
@@ -44,16 +49,19 @@ data class PaginationState(
 class ScreenStore(
     private val repository: ScreenRepository,
     private val scope: CoroutineScope,
+    private val logger: Logger = ConsoleLogger(LogTags.RUNTIME),
 ) {
     private val stateInternal = MutableStateFlow(ScreenState())
     val state: StateFlow<ScreenState> = stateInternal
 
     fun load(screenId: String, params: Map<String, String> = emptyMap()) {
+        logger.info(formatLog(LogMessages.LOAD_START, screenId, params))
         stateInternal.update { it.copy(status = ScreenStatus.Loading, error = null) }
         scope.launch {
             val result = repository.fetch(screenId, params)
             stateInternal.value = result.fold(
                 onSuccess = { fetched ->
+                    logger.debug(formatLog(LogMessages.LOAD_SUCCESS, fetched.id))
                     ScreenState(
                         remoteScreen = fetched,
                         status = ScreenStatus.Ready,
@@ -62,6 +70,7 @@ class ScreenStore(
                     )
                 },
                 onFailure = { throwable ->
+                    logger.error(formatLog(LogMessages.LOAD_FAIL, screenId), throwable)
                     ScreenState(status = ScreenStatus.Error, error = throwable.message)
                 },
             )
@@ -79,12 +88,14 @@ class ScreenStore(
 
     fun refresh(screenId: String? = stateInternal.value.remoteScreen?.id, params: Map<String, String> = emptyMap()) {
         val id = screenId ?: return
+        logger.info(formatLog(LogMessages.REFRESH_START, id, params))
         stateInternal.update { it.copy(refreshing = true, error = null, pagination = PaginationState()) }
         scope.launch {
             val result = repository.fetch(id, params)
             stateInternal.update { prev ->
                 result.fold(
                     onSuccess = { fetched ->
+                        logger.debug(formatLog(LogMessages.REFRESH_SUCCESS, fetched.id))
                         prev.copy(
                             remoteScreen = fetched,
                             status = ScreenStatus.Ready,
@@ -94,6 +105,7 @@ class ScreenStore(
                         )
                     },
                     onFailure = { throwable ->
+                        logger.error(formatLog(LogMessages.REFRESH_FAIL, id), throwable)
                         prev.copy(
                             status = ScreenStatus.Error,
                             refreshing = false,
@@ -113,6 +125,7 @@ class ScreenStore(
         val screen = snapshot.remoteScreen ?: return
         if (!snapshot.pagination.hasMore || snapshot.loadingMore) return
         val nextPage = snapshot.pagination.page + 1
+        logger.info(formatLog(LogMessages.NEXT_PAGE_START, screen.id, nextPage))
         val mergedParams = params.toMutableMap()
         settings?.pageParam?.let { mergedParams[it] = nextPage.toString() }
         settings?.pageSize?.let { size -> mergedParams[settings.pageParam ?: "page_size"] = size.toString() }
@@ -128,6 +141,7 @@ class ScreenStore(
                     onSuccess = { fetched ->
                         val merged = mergeForPagination(prev.remoteScreen, fetched)
                         val newEmpty = isScreenEmpty(merged)
+                        logger.debug(formatLog(LogMessages.NEXT_PAGE_SUCCESS, screen.id, newEmpty))
                         prev.copy(
                             remoteScreen = merged,
                             loadingMore = false,
@@ -139,6 +153,7 @@ class ScreenStore(
                         )
                     },
                     onFailure = { throwable ->
+                        logger.error(formatLog(LogMessages.NEXT_PAGE_FAIL, screen.id), throwable)
                         prev.copy(
                             loadingMore = false,
                             status = prev.status,

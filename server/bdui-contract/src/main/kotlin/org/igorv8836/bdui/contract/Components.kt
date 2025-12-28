@@ -2,24 +2,22 @@ package org.igorv8836.bdui.contract
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.fasterxml.jackson.annotation.JsonTypeName
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
-    JsonSubTypes.Type(value = Container::class, name = "container"),
-    JsonSubTypes.Type(value = TextElement::class, name = "text"),
-    JsonSubTypes.Type(value = ButtonElement::class, name = "button"),
-    JsonSubTypes.Type(value = ImageElement::class, name = "image"),
-    JsonSubTypes.Type(value = LazyListElement::class, name = "lazyList"),
-    JsonSubTypes.Type(value = SpacerElement::class, name = "spacer"),
-    JsonSubTypes.Type(value = DividerElement::class, name = "divider"),
-    JsonSubTypes.Type(value = ListItemElement::class, name = "listItem"),
+    JsonSubTypes.Type(value = Container::class),
+    JsonSubTypes.Type(value = TextElement::class),
+    JsonSubTypes.Type(value = ButtonElement::class),
+    JsonSubTypes.Type(value = ImageElement::class),
+    JsonSubTypes.Type(value = LazyListElement::class),
+    JsonSubTypes.Type(value = SpacerElement::class),
+    JsonSubTypes.Type(value = DividerElement::class),
+    JsonSubTypes.Type(value = ListItemElement::class),
 )
 sealed interface ComponentNode {
     val id: String
 }
 
-@JsonTypeName("container")
 data class Container(
     override val id: String,
     val direction: ContainerDirection,
@@ -34,7 +32,6 @@ enum class ContainerDirection {
     Overlay,
 }
 
-@JsonTypeName("text")
 data class TextElement(
     override val id: String,
     val textKey: String,
@@ -52,7 +49,6 @@ enum class TextStyle {
     Caption,
 }
 
-@JsonTypeName("button")
 data class ButtonElement(
     override val id: String,
     val titleKey: String,
@@ -71,7 +67,6 @@ enum class ButtonKind {
     Ghost,
 }
 
-@JsonTypeName("image")
 data class ImageElement(
     override val id: String,
     val url: String,
@@ -79,7 +74,6 @@ data class ImageElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@JsonTypeName("lazyList")
 data class LazyListElement(
     override val id: String,
     val items: List<ComponentNode>,
@@ -87,7 +81,6 @@ data class LazyListElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@JsonTypeName("spacer")
 data class SpacerElement(
     override val id: String,
     val width: Float? = null,
@@ -95,7 +88,6 @@ data class SpacerElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@JsonTypeName("divider")
 data class DividerElement(
     override val id: String,
     val thickness: Float? = null,
@@ -104,7 +96,6 @@ data class DividerElement(
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
-@JsonTypeName("listItem")
 data class ListItemElement(
     override val id: String,
     val titleKey: String,

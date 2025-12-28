@@ -8,6 +8,9 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator
 import org.igorv8836.bdui.backend.core.BackendResult
 import org.igorv8836.bdui.backend.runtime.BackendEngine
 import org.igorv8836.rentcontrol.backend.module.DemoBackendModule

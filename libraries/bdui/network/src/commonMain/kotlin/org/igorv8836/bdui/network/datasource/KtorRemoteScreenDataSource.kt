@@ -8,13 +8,20 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.appendPathSegments
 import io.ktor.http.isSuccess
 import io.ktor.http.takeFrom
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.igorv8836.bdui.contract.RemoteScreen
+import org.igorv8836.bdui.core.errors.BduiError
+import org.igorv8836.bdui.core.errors.BduiException
+import org.igorv8836.bdui.logger.ConsoleLogger
+import org.igorv8836.bdui.logger.Logger
+import org.igorv8836.bdui.logger.LogMessages
+import org.igorv8836.bdui.logger.LogTags
+import org.igorv8836.bdui.logger.formatLog
 import org.igorv8836.bdui.network.client.createHttpClient
 import org.igorv8836.bdui.network.config.NetworkConfig
-import org.igorv8836.bdui.network.errors.ScreenNetworkException
-import org.igorv8836.bdui.network.errors.ScreenRemoteException
 
 /**
  * Ktor-based implementation that delegates decoding to provided function.
@@ -27,12 +34,15 @@ class KtorRemoteScreenDataSource(
         json.decodeFromString(RemoteScreen.serializer(), body)
     },
     client: HttpClient? = null,
-    private val logger: (String) -> Unit = {},
+    private val logger: Logger = ConsoleLogger(LogTags.NET),
 ) : RemoteScreenDataSource {
 
-    private val httpClient: HttpClient = client ?: createHttpClient(config, logger)
+    private val httpClient: HttpClient = client ?: createHttpClient(config) { message ->
+        logger.debug(message)
+    }
 
     override suspend fun fetch(screenId: String, params: Map<String, String>): Result<RemoteScreen> = runCatching {
+        logger.info(formatLog(LogMessages.FETCH_SCREEN, screenId, params))
         val response = httpClient.get {
             url {
                 takeFrom(config.baseUrl)
@@ -47,13 +57,21 @@ class KtorRemoteScreenDataSource(
 
         if (!response.status.isSuccess()) {
             val body = response.safeBody()
-            throw ScreenNetworkException(response.status.value, body)
+            logger.warn(formatLog(LogMessages.NETWORK_ERROR, response.status.value, body))
+            throw BduiException(BduiError.Network(response.status.value, body))
         }
         val body = response.safeBody()
         decode(body)
     }.recoverCatching { throwable ->
-        throw ScreenRemoteException("Failed to load screen '$screenId'", throwable)
+        val error = when (throwable) {
+            is BduiException -> throwable.error
+            else -> BduiError.Remote("Failed to load screen '$screenId'", throwable)
+        }
+        logger.error(formatLog(LogMessages.REMOTE_ERROR, screenId, error.message), throwable)
+        throw BduiException(error)
     }
 
-    private suspend fun HttpResponse.safeBody(): String = runCatching { bodyAsText() }.getOrDefault("")
+    private suspend fun HttpResponse.safeBody(): String = withContext(Dispatchers.Default) {
+        runCatching { bodyAsText() }.getOrDefault("")
+    }
 }

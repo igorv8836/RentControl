@@ -25,7 +25,7 @@ kotlin {
             implementation(projects.libraries.bdui.contract)
             implementation(projects.libraries.bdui.runtime)
             implementation(projects.libraries.bdui.actions)
-            implementation(projects.libraries.bdui.network)
+            implementation(projects.libraries.bdui.engine)
             implementation(projects.libraries.bdui.cache)
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -37,6 +37,10 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+        }
+        androidInstrumentedTest.dependencies {
+            implementation(libs.androidx.testExt.junit)
+            implementation(libs.androidx.compose.ui.test.junit4)
         }
     }
 }
@@ -50,5 +54,10 @@ android {
     }
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+}
+
+dependencies {
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

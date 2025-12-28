@@ -17,7 +17,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            api(projects.libraries.bdui.common)
+            api(projects.libraries.bdui.core)
             api(projects.libraries.bdui.runtime)
             api(projects.libraries.bdui.contract)
             implementation(libs.kotlinx.coroutines.core)

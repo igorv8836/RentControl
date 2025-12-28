@@ -4,9 +4,9 @@ import org.igorv8836.bdui.contract.Action
 import org.igorv8836.bdui.contract.Binding
 import org.igorv8836.bdui.contract.Condition
 import org.igorv8836.bdui.contract.MissingVariableBehavior
-import org.igorv8836.bdui.contract.Trigger
-import org.igorv8836.bdui.contract.TriggerSource
 import org.igorv8836.bdui.contract.SetVariableAction
+import org.igorv8836.bdui.contract.Trigger
+import org.igorv8836.bdui.contract.VariableChanged
 import org.igorv8836.bdui.contract.VariableScope
 import org.igorv8836.bdui.contract.VariableValue
 
@@ -51,7 +51,7 @@ fun variableChangedTrigger(
     condition: Condition? = null,
 ): Trigger = Trigger(
     id = id,
-    source = TriggerSource.VariableChanged(key = key, scope = scope),
+    source = VariableChanged(key = key, scope = scope),
     condition = condition,
     actions = actions,
 )
