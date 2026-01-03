@@ -20,10 +20,17 @@ data class ForwardAction(
 
 class ForwardActionHandler : ActionHandler<ForwardAction> {
     override suspend fun handle(action: ForwardAction, context: ActionContext) {
-        context.navigator.forward(
-            path = action.path,
-            remoteScreen = action.remoteScreen,
-            parameters = action.parameters,
-        )
+        action.remoteScreen?.let {
+            context.navigator.forward(
+                remoteScreen = it,
+                parameters = action.parameters,
+            )
+        }
+        action.path?.let {
+            context.navigator.forward(
+                path = it,
+                parameters = action.parameters,
+            )
+        }
     }
 }

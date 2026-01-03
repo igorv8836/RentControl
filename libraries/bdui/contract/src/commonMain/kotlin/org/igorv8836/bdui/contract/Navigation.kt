@@ -32,6 +32,7 @@ enum class OverlayKind {
 @Serializable
 data class Popup(
     val style: PopupStyle = PopupStyle.Dialog,
+    val position: PopupPosition = PopupPosition.Center,
     val dismissible: Boolean = true,
     val payload: Map<String, String> = emptyMap(),
 )
@@ -41,4 +42,11 @@ enum class PopupStyle {
     Dialog,
     BottomSheet,
     Fullscreen,
+}
+
+@Serializable
+enum class PopupPosition {
+    Top,
+    Center,
+    Bottom,
 }
