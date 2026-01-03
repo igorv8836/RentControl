@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     JsonSubTypes.Type(value = SetVariableAction::class),
     JsonSubTypes.Type(value = IncrementVariableAction::class),
     JsonSubTypes.Type(value = RemoveVariableAction::class),
+    JsonSubTypes.Type(value = RemoteAction::class),
 )
 sealed interface Action {
     val id: String
@@ -80,3 +81,13 @@ data class RemoveVariableAction(
     val scope: VariableScope = VariableScope.Global,
     val screenId: String? = null,
 ) : Action
+
+data class RemoteAction(
+    override val id: String,
+    val path: String,
+    val parameters: Map<String, String> = emptyMap(),
+) : Action
+
+data class ActionResponse(
+    val actions: List<Action> = emptyList(),
+)

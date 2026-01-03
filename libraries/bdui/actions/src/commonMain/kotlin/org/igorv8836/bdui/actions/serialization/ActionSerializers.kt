@@ -9,6 +9,7 @@ import org.igorv8836.bdui.actions.generic.SubmitAction
 import org.igorv8836.bdui.actions.navigation.ForwardAction
 import org.igorv8836.bdui.actions.navigation.OverlayAction
 import org.igorv8836.bdui.actions.navigation.PopupAction
+import org.igorv8836.bdui.actions.navigation.RemoteAction
 import org.igorv8836.bdui.actions.variables.IncrementVariableAction
 import org.igorv8836.bdui.actions.variables.RemoveVariableAction
 import org.igorv8836.bdui.actions.variables.SetVariableAction
@@ -23,6 +24,7 @@ object ActionSerializers {
             subclass(ForwardAction::class)
             subclass(PopupAction::class)
             subclass(OverlayAction::class)
+            subclass(RemoteAction::class)
             subclass(SetVariableAction::class)
             subclass(IncrementVariableAction::class)
             subclass(RemoveVariableAction::class)

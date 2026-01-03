@@ -8,6 +8,7 @@ import org.igorv8836.bdui.actions.buildActionRegistry
 import org.igorv8836.bdui.contract.RemoteScreen
 import org.igorv8836.bdui.contract.ScreenEventType
 import org.igorv8836.bdui.core.actions.ActionRegistry
+import org.igorv8836.bdui.core.actions.ActionFetcher
 import org.igorv8836.bdui.core.context.ActionContext
 import org.igorv8836.bdui.core.context.ScreenContext
 import org.igorv8836.bdui.core.navigation.Navigator
@@ -29,6 +30,7 @@ class ScreenEngine internal constructor(
     val actionRegistry: ActionRegistry,
     val variableStore: VariableStore,
     val navigator: Navigator,
+    val actionFetcher: ActionFetcher?,
     private val scope: CoroutineScope,
     private val logger: Logger = ConsoleLogger(LogTags.ENGINE),
 ) {
@@ -82,6 +84,7 @@ class ScreenEngine internal constructor(
                     navigator = navigator,
                     screenContext = screenContext,
                     screenId = screen.id,
+                    actionFetcher = actionFetcher,
                 ),
                 externalScope = scope,
             ).also { engine ->
@@ -126,6 +129,7 @@ class ScreenEngine internal constructor(
                         navigator = navigator,
                         screenContext = screenContext,
                         screenId = screenId,
+                        actionFetcher = actionFetcher,
                     ),
                 )
             }
@@ -148,6 +152,7 @@ class ScreenEngineFactory(
     private val actionRegistry: ActionRegistry? = null,
     private val variableStore: VariableStore? = null,
     private val globalStore: VariableStore? = null,
+    private val actionFetcher: ActionFetcher? = null,
     private val logger: Logger = ConsoleLogger(LogTags.ENGINE),
 ) {
     fun create(screenId: String, scope: CoroutineScope): ScreenEngine {
@@ -162,9 +167,10 @@ class ScreenEngineFactory(
             actionRegistry = registry,
             externalScope = scope,
             providedVariableStore = variables,
+            actionFetcher = actionFetcher,
             logger = logger,
         )
-        return ScreenEngine(controller, registry, variables, navigator, scope, logger)
+        return ScreenEngine(controller, registry, variables, navigator, actionFetcher, scope, logger)
     }
 
     private companion object {

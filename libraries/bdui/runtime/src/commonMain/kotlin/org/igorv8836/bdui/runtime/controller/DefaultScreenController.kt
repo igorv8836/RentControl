@@ -5,6 +5,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.igorv8836.bdui.core.actions.ActionRegistry
+import org.igorv8836.bdui.core.actions.ActionFetcher
 import org.igorv8836.bdui.core.context.ActionContext
 import org.igorv8836.bdui.core.context.ScreenContext
 import org.igorv8836.bdui.core.navigation.Navigator
@@ -26,6 +27,7 @@ class DefaultScreenController(
     private val actionRegistry: ActionRegistry,
     private val externalScope: CoroutineScope,
     providedVariableStore: VariableStore? = null,
+    private val actionFetcher: ActionFetcher? = null,
     private val logger: Logger = ConsoleLogger(LogTags.ENGINE),
 ) : ScreenController {
 
@@ -42,6 +44,7 @@ class DefaultScreenController(
         navigator = navigator,
         screenContext = screenContext,
         screenId = screenId,
+        actionFetcher = actionFetcher,
     )
 
     override val state: StateFlow<ScreenState> = store.state

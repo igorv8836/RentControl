@@ -8,7 +8,9 @@ import org.igorv8836.bdui.cache.store.FileScreenCacheStore
 import org.igorv8836.bdui.cache.store.MemoryScreenCacheStore
 import org.igorv8836.bdui.cache.store.ScreenCacheStore
 import org.igorv8836.bdui.network.datasource.RemoteScreenDataSource
+import org.igorv8836.bdui.network.datasource.RemoteActionsDataSource
 import org.igorv8836.bdui.runtime.ScreenRepository
+import org.igorv8836.bdui.core.actions.ActionFetcher
 
 /**
  * Utility to compose network + cache into a single [ScreenRepository].
@@ -41,3 +43,7 @@ fun buildScreenRepository(
         policyResolver = policyResolver,
     )
 }
+
+fun buildActionFetcher(
+    remote: RemoteActionsDataSource,
+): ActionFetcher = RemoteActionsFetcher(remote)

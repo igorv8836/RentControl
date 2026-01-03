@@ -9,6 +9,7 @@ object LogTags {
 
 object LogMessages {
     const val FETCH_SCREEN = "fetch screen=%s params=%s"
+    const val FETCH_ACTIONS = "fetch actions=%s params=%s"
     const val NETWORK_ERROR = "network error status=%s body=%s"
     const val REMOTE_ERROR = "remote error for screen=%s: %s"
     const val LOAD_START = "load screen=%s params=%s"

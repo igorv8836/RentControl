@@ -22,6 +22,8 @@ import org.igorv8836.bdui.logger.formatLog
 import org.igorv8836.bdui.network.config.NetworkConfig
 import org.igorv8836.bdui.network.datasource.KtorRemoteScreenDataSource
 import org.igorv8836.bdui.network.repository.buildScreenRepository
+import org.igorv8836.bdui.network.datasource.KtorRemoteActionsDataSource
+import org.igorv8836.bdui.network.repository.buildActionFetcher
 import org.igorv8836.bdui.runtime.ScreenRepository
 import org.igorv8836.bdui.runtime.VariableStoreImpl
 
@@ -49,6 +51,17 @@ class EngineProvider(
     httpClient: HttpClient? = null,
 ) {
     private val repository: ScreenRepository
+    private val actionFetcher = buildActionFetcher(
+        remote = KtorRemoteActionsDataSource(
+            config = NetworkConfig(
+                baseUrl = config.baseUrl,
+                defaultHeaders = config.defaultHeaders,
+            ),
+            json = config.json,
+            client = httpClient,
+            logger = config.logger,
+        ),
+    )
 
     init {
         val dataSource = KtorRemoteScreenDataSource(
@@ -89,6 +102,7 @@ class EngineProvider(
             navigator = defaultNavigator,
             actionRegistry = registry,
             variableStore = vars,
+            actionFetcher = actionFetcher,
             logger = config.logger,
         )
         val engine = factory.create(screenId, scope)

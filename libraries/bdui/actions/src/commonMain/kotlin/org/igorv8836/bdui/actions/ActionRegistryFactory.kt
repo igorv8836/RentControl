@@ -12,6 +12,8 @@ import org.igorv8836.bdui.actions.navigation.OverlayAction
 import org.igorv8836.bdui.actions.navigation.OverlayActionHandler
 import org.igorv8836.bdui.actions.navigation.PopupAction
 import org.igorv8836.bdui.actions.navigation.PopupActionHandler
+import org.igorv8836.bdui.actions.navigation.RemoteAction
+import org.igorv8836.bdui.actions.navigation.RemoteActionHandler
 import org.igorv8836.bdui.actions.variables.IncrementVariableAction
 import org.igorv8836.bdui.actions.variables.IncrementVariableActionHandler
 import org.igorv8836.bdui.actions.variables.RemoveVariableAction
@@ -30,6 +32,7 @@ fun defaultActionHandlers(): Map<KClass<out Action>, ActionHandler<*>> = mapOf(
     ForwardAction::class to ForwardActionHandler(),
     PopupAction::class to PopupActionHandler(),
     OverlayAction::class to OverlayActionHandler(),
+    RemoteAction::class to RemoteActionHandler(),
     SetVariableAction::class to SetVariableActionHandler(),
     IncrementVariableAction::class to IncrementVariableActionHandler(),
     RemoveVariableAction::class to RemoveVariableActionHandler(),
