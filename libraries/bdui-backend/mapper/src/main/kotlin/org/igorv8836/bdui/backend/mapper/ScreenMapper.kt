@@ -11,10 +11,10 @@ import org.igorv8836.bdui.contract.RemoteScreen
  * No I/O or side effects allowed inside implementations.
  */
 fun interface ScreenMapper<I> {
-    fun map(input: I, context: ExecutionContext): BackendResult<RemoteScreen>
+    suspend fun map(input: I, context: ExecutionContext): BackendResult<RemoteScreen>
 }
 
-fun <I> ScreenMapper<I>.map(input: I): BackendResult<RemoteScreen> = map(input, ExecutionContext())
+suspend fun <I> ScreenMapper<I>.map(input: I): BackendResult<RemoteScreen> = map(input, ExecutionContext())
 
 /**
  * Helper to produce a validation failure with issues.

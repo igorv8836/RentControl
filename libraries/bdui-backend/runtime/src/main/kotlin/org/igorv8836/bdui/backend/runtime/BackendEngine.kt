@@ -12,7 +12,7 @@ class BackendEngine private constructor(
     private val registry: BackendRegistry,
     private val limits: LimitConfig,
 ) {
-    fun render(screenId: String, input: Any?, context: ExecutionContext = ExecutionContext()): BackendResult<RemoteScreen> {
+    suspend fun render(screenId: String, input: Any?, context: ExecutionContext = ExecutionContext()): BackendResult<RemoteScreen> {
         val entry = registry.mappers[screenId]
             ?: return BackendResult.failure(
                 BackendError.Mapping(

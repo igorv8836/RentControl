@@ -11,10 +11,8 @@ import org.igorv8836.rentcontrol.backend.screen.buildCatalogScreen
 class CatalogScreenMapper(
     private val offersProvider: OffersDataProvider,
 ) : ScreenMapper<Unit> {
-    override fun map(input: Unit, context: ExecutionContext): BackendResult<org.igorv8836.bdui.contract.RemoteScreen> =
-        runBlocking {
-            offersProvider.fetch(Unit, DataPolicy()).flatMap { offers ->
-                BackendResult.success(buildCatalogScreen(offers))
-            }
+    override suspend fun map(input: Unit, context: ExecutionContext): BackendResult<org.igorv8836.bdui.contract.RemoteScreen> =
+        offersProvider.fetch(Unit, DataPolicy()).flatMap { offers ->
+            BackendResult.success(buildCatalogScreen(offers))
         }
 }

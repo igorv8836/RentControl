@@ -12,10 +12,8 @@ import org.igorv8836.rentcontrol.backend.screen.buildHomeScreen
 class HomeScreenMapper(
     private val offersProvider: OffersDataProvider,
 ) : ScreenMapper<Unit> {
-    override fun map(input: Unit, context: ExecutionContext): BackendResult<RemoteScreen> =
-        runBlocking {
-            offersProvider.fetch(Unit, DataPolicy()).flatMap { offers ->
-                BackendResult.success(buildHomeScreen(offers))
-            }
+    override suspend fun map(input: Unit, context: ExecutionContext): BackendResult<RemoteScreen> =
+        offersProvider.fetch(Unit, DataPolicy()).flatMap { offers ->
+            BackendResult.success(buildHomeScreen(offers))
         }
 }

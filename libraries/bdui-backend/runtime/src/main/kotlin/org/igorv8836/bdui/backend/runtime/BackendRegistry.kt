@@ -71,7 +71,7 @@ internal class MutableMapperRegistry {
 }
 
 fun interface MapperEntry {
-    fun map(input: Any?, context: ExecutionContext): BackendResult<RemoteScreen>
+    suspend fun map(input: Any?, context: ExecutionContext): BackendResult<RemoteScreen>
 }
 
 internal class MutableDataProviderRegistry {
