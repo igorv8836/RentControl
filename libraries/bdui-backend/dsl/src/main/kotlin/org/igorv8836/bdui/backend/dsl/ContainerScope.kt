@@ -1,5 +1,7 @@
 package org.igorv8836.bdui.backend.dsl
 
+import org.igorv8836.bdui.backend.core.RenderContext
+import org.igorv8836.bdui.contract.Action
 import org.igorv8836.bdui.contract.ButtonElement
 import org.igorv8836.bdui.contract.ButtonKind
 import org.igorv8836.bdui.contract.ComponentNode
@@ -19,7 +21,9 @@ import org.igorv8836.bdui.contract.BottomTab
 /**
  * Container builder scope for nested layout declarations.
  */
-class ContainerScope {
+class ContainerScope(
+    private val ctx: RenderContext = RenderContext(),
+) {
     internal val children = mutableListOf<ComponentNode>()
 
     fun container(
@@ -29,7 +33,7 @@ class ContainerScope {
         visibleIf: Condition? = null,
         block: ContainerScope.() -> Unit = {},
     ): Container {
-        val scope = ContainerScope().apply(block)
+        val scope = ContainerScope(ctx).apply(block)
         return Container(
             id = id,
             direction = direction,
@@ -58,22 +62,26 @@ class ContainerScope {
     fun button(
         id: String,
         title: String,
-        actionId: String,
+        action: Action,
         kind: ButtonKind = ButtonKind.Primary,
         isEnabled: Boolean = true,
         enabledIf: Condition? = null,
         visibleIf: Condition? = null,
         semantics: Semantics? = null,
-    ): ButtonElement = ButtonElement(
-        id = id,
-        title = title,
-        actionId = actionId,
-        kind = kind,
-        isEnabled = isEnabled,
-        semantics = semantics,
-        enabledIf = enabledIf,
-        visibleIf = visibleIf,
-    ).also { children += it }
+    ): ButtonElement =
+        ButtonElement(
+            id = id,
+            title = title,
+            actionId = action.id,
+            kind = kind,
+            isEnabled = isEnabled,
+            semantics = semantics,
+            enabledIf = enabledIf,
+            visibleIf = visibleIf,
+        ).also {
+            ctx.register(action)
+            children += it
+        }
 
     fun spacer(
         id: String,
@@ -106,6 +114,7 @@ class ContainerScope {
         items: List<ComponentNode>,
         placeholderCount: Int = 0,
         visibleIf: Condition? = null,
+        ctx: RenderContext? = this.ctx,
     ): LazyListElement = LazyListElement(
         id = id,
         items = items,
@@ -117,9 +126,10 @@ class ContainerScope {
         id: String,
         placeholderCount: Int = 0,
         visibleIf: Condition? = null,
+        ctx: RenderContext = this.ctx,
         block: ContainerScope.() -> Unit,
     ): LazyListElement {
-        val scope = ContainerScope().apply(block)
+        val scope = ContainerScope(ctx).apply(block)
         return list(
             id = id,
             items = scope.children.toList(),
@@ -132,42 +142,51 @@ class ContainerScope {
         id: String,
         title: String,
         subtitle: String? = null,
-        actionId: String? = null,
+        action: Action? = null,
         semantics: Semantics? = null,
         enabledIf: Condition? = null,
         visibleIf: Condition? = null,
-    ): ListItemElement = ListItemElement(
-        id = id,
-        title = title,
-        subtitle = subtitle,
-        actionId = actionId,
-        semantics = semantics,
-        enabledIf = enabledIf,
-        visibleIf = visibleIf,
-    ).also { children += it }
+    ): ListItemElement {
+        val resolvedActionId = action?.id
+        action?.let { ctx.register(it) }
+        return ListItemElement(
+            id = id,
+            title = title,
+            subtitle = subtitle,
+            actionId = resolvedActionId,
+            semantics = semantics,
+            enabledIf = enabledIf,
+            visibleIf = visibleIf,
+        ).also { children += it }
+    }
 
     fun bottomBar(selectedTabId: String? = null, block: BottomBarBuilder.() -> Unit): BottomBar {
-        val builder = BottomBarBuilder(selectedTabId)
+        val builder = BottomBarBuilder(selectedTabId, ctx)
         builder.block()
         return builder.build()
     }
 }
 
-class BottomBarBuilder(private val selected: String?) {
+class BottomBarBuilder(
+    private val selected: String?,
+    private val ctx: RenderContext,
+) {
     private val tabs = mutableListOf<BottomTab>()
 
     fun tab(
         id: String,
         title: String,
-        actionId: String,
+        action: Action,
         iconUrl: String? = null,
         badge: String? = null,
         visibleIf: org.igorv8836.bdui.contract.Condition? = null,
     ) {
+        val resolvedActionId = action.id
+        ctx.register(action)
         tabs += BottomTab(
             id = id,
             title = title,
-            actionId = actionId,
+            actionId = resolvedActionId,
             iconUrl = iconUrl,
             badge = badge,
             visibleIf = visibleIf,
@@ -188,9 +207,10 @@ fun container(
     direction: ContainerDirection = ContainerDirection.Column,
     spacing: Float? = null,
     visibleIf: Condition? = null,
+    ctx: RenderContext = RenderContext(),
     block: ContainerScope.() -> Unit = {},
 ): Container {
-    val scope = ContainerScope().apply(block)
+    val scope = ContainerScope(ctx).apply(block)
     return Container(
         id = id,
         direction = direction,

@@ -7,5 +7,6 @@ kotlin {
 }
 
 dependencies {
+    implementation(projects.libraries.bduiBackend.contract)
     testImplementation(libs.kotlin.test)
 }

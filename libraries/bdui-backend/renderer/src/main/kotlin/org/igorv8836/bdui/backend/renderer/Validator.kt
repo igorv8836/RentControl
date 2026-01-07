@@ -36,7 +36,7 @@ fun validateScreen(remoteScreen: RemoteScreen, limits: LimitConfig): List<Valida
     }
 
     val seenIds = mutableSetOf<String>()
-    val totalNodes = traverseScreen(remoteScreen.layout.root, remoteScreen.layout.scaffold) { node, depth ->
+    val totalNodes = traverseScreen(remoteScreen.layout) { node, depth ->
         if (!seenIds.add(node.id)) {
             issues += ValidationIssue(
                 path = "components.${node.id}",
@@ -91,8 +91,7 @@ fun validateScreen(remoteScreen: RemoteScreen, limits: LimitConfig): List<Valida
 }
 
 private fun traverseScreen(
-    root: ComponentNode,
-    scaffold: Scaffold?,
+    layout: org.igorv8836.bdui.contract.Layout,
     visit: (ComponentNode, depth: Int) -> Unit,
 ): Int {
     var count = 0
@@ -101,9 +100,12 @@ private fun traverseScreen(
         visit(node, depth)
         childrenOf(node).forEach { walk(it, depth + 1) }
     }
-    scaffold?.top?.let { walk(it, depth = 1) }
-    walk(root, depth = 1)
-    scaffold?.bottom?.let { walk(it, depth = 1) }
+    layout.scaffold?.top?.let { walk(it, depth = 1) }
+    layout.sections.forEach { section ->
+        walk(section.content, depth = 1)
+    }
+    layout.root?.let { walk(it, depth = 1) }
+    layout.scaffold?.bottom?.let { walk(it, depth = 1) }
     return count
 }
 

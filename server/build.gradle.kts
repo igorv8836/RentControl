@@ -23,7 +23,6 @@ dependencies {
     implementation(projects.libraries.bduiBackend.dsl)
     implementation(projects.libraries.bduiBackend.mapper)
     implementation(projects.libraries.bduiBackend.renderer)
-    implementation(projects.libraries.bduiBackend.data)
     implementation(projects.libraries.bduiBackend.runtime)
     implementation(projects.libraries.bduiBackend.contract)
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.2")

@@ -166,23 +166,62 @@ class ScreenStore(
     }
 
     private fun isScreenEmpty(remoteScreen: RemoteScreen): Boolean =
-        when (val root = remoteScreen.layout.root) {
-            is LazyListElement -> root.items.isEmpty()
-            is Container -> root.children.all { child -> child is LazyListElement && child.items.isEmpty() }
-            else -> false
+        if (remoteScreen.layout.sections.isNotEmpty()) {
+            remoteScreen.layout.sections.all { section ->
+                when (val content = section.content) {
+                    is LazyListElement -> content.items.isEmpty()
+                    is Container -> content.children.all { child -> child is LazyListElement && child.items.isEmpty() }
+                    else -> false
+                }
+            }
+        } else {
+            when (val root = remoteScreen.layout.root) {
+                is LazyListElement -> root.items.isEmpty()
+                is Container -> root.children.all { child -> child is LazyListElement && child.items.isEmpty() }
+                else -> false
+            }
         }
 
     private fun mergeForPagination(existing: RemoteScreen?, incoming: RemoteScreen): RemoteScreen {
         if (existing == null) return incoming
-        val mergedRoot = mergeNode(existing.layout.root, incoming.layout.root)
-        val mergedLayout = existing.layout.copy(
-            root = mergedRoot,
-            scaffold = incoming.layout.scaffold ?: existing.layout.scaffold,
-        )
+        val mergedLayout = if (incoming.layout.sections.isNotEmpty() || existing.layout.sections.isNotEmpty()) {
+            val mergedSections = mergeSections(existing.layout.sections, incoming.layout.sections)
+            existing.layout.copy(
+                sections = mergedSections,
+                scaffold = incoming.layout.scaffold ?: existing.layout.scaffold,
+            )
+        } else {
+            val mergedRoot = mergeNode(existing.layout.root, incoming.layout.root)
+            existing.layout.copy(
+                root = mergedRoot,
+                scaffold = incoming.layout.scaffold ?: existing.layout.scaffold,
+            )
+        }
         return existing.copy(layout = mergedLayout)
     }
 
-    private fun mergeNode(current: ComponentNode, incoming: ComponentNode): ComponentNode =
+    private fun mergeSections(
+        current: List<org.igorv8836.bdui.contract.Section>,
+        incoming: List<org.igorv8836.bdui.contract.Section>,
+    ): List<org.igorv8836.bdui.contract.Section> {
+        if (current.isEmpty()) return incoming
+        val merged = current.map { existingSection ->
+            val inc = incoming.firstOrNull { it.id == existingSection.id }
+            if (inc != null) {
+                val mergedContent = mergeNode(existingSection.content, inc.content) ?: inc.content
+                existingSection.copy(
+                    content = mergedContent,
+                    scroll = inc.scroll,
+                    sticky = inc.sticky,
+                    visibleIf = inc.visibleIf,
+                )
+            } else existingSection
+        }
+        val newOnes = incoming.filterNot { inc -> current.any { it.id == inc.id } }
+        return merged + newOnes
+    }
+
+    private fun mergeNode(current: ComponentNode?, incoming: ComponentNode?): ComponentNode? =
         when {
             current is LazyListElement && incoming is LazyListElement && current.id == incoming.id -> {
                 current.copy(items = current.items + incoming.items)
@@ -191,11 +230,11 @@ class ScreenStore(
             current is Container && incoming is Container && current.id == incoming.id -> {
                 val mergedChildren = current.children.map { child ->
                     val incomingChild = incoming.children.firstOrNull { it.id == child.id }
-                    if (incomingChild != null) mergeNode(child, incomingChild) else child
+                    if (incomingChild != null) mergeNode(child, incomingChild) ?: child else child
                 }
                 current.copy(children = mergedChildren)
             }
 
-            else -> current
+            else -> incoming ?: current
         }
 }

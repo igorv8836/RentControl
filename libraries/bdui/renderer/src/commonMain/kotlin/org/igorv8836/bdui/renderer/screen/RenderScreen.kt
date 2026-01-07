@@ -24,11 +24,13 @@ import org.igorv8836.bdui.contract.ComponentNode
 import org.igorv8836.bdui.contract.Container
 import org.igorv8836.bdui.contract.LazyListElement
 import org.igorv8836.bdui.contract.RemoteScreen
+import org.igorv8836.bdui.contract.Section
 import org.igorv8836.bdui.core.variables.VariableStore
 import org.igorv8836.bdui.renderer.binding.BindingResolver
 import org.igorv8836.bdui.renderer.navigation.BottomNavigationBar
 import org.igorv8836.bdui.renderer.node.PaginationConfig
 import org.igorv8836.bdui.renderer.node.RenderNode
+import org.igorv8836.bdui.renderer.section.RenderSections
 import org.igorv8836.bdui.runtime.ScreenState
 
 @Composable
@@ -45,9 +47,10 @@ internal fun RenderScreen(
     onLoadNextPage: (() -> Unit)?,
 ) {
     val root = remoteScreen.layout.root
+    val sections = remoteScreen.layout.sections
     val scaffold = remoteScreen.layout.scaffold
     val bottomBar = scaffold?.bottomBar
-    val hasLazyList = containsLazyList(root)
+    val hasLazyList = root?.let { containsLazyList(it) } == true
     val resolver = remember(remoteScreen.id, variablesVersion) {
         BindingResolver(
             variables = variables,
@@ -59,7 +62,7 @@ internal fun RenderScreen(
         .padding(16.dp)
 
     val settings = remoteScreen.settings
-    val isScrollable = settings.scrollable && !hasLazyList
+    val isScrollable = settings.scrollable && !hasLazyList && sections.isEmpty()
     val paginationConfig = settings.pagination?.takeIf { it.enabled }?.let {
         PaginationConfig(
             prefetchDistance = it.prefetchDistance,
@@ -80,7 +83,14 @@ internal fun RenderScreen(
     } else modifier.fillMaxSize()
 
     val content: @Composable BoxScope.() -> Unit = {
-        if (hasLazyList) {
+        if (sections.isNotEmpty()) {
+            RenderSections(
+                sections = sections,
+                resolver = resolver,
+                pagination = paginationConfig,
+                onAction = onAction,
+            )
+        } else if (hasLazyList) {
             Column(
                 modifier = contentModifier.fillMaxSize(),
             ) {
@@ -99,7 +109,7 @@ internal fun RenderScreen(
                         .fillMaxWidth(),
                 ) {
                     RenderNode(
-                        node = root,
+                        node = root!!,
                         onAction = onAction,
                         resolver = resolver,
                         modifier = Modifier.fillMaxWidth(),
@@ -140,13 +150,15 @@ internal fun RenderScreen(
                         pagination = paginationConfig,
                     )
                 }
-                RenderNode(
-                    node = root,
-                    onAction = onAction,
-                    resolver = resolver,
-                    modifier = Modifier.fillMaxWidth(),
-                    pagination = paginationConfig,
-                )
+                root?.let {
+                    RenderNode(
+                        node = it,
+                        onAction = onAction,
+                        resolver = resolver,
+                        modifier = Modifier.fillMaxWidth(),
+                        pagination = paginationConfig,
+                    )
+                }
                 scaffold?.bottom?.let {
                     RenderNode(
                         node = it,

@@ -18,7 +18,8 @@ data class RemoteScreen(
 
 @Serializable
 data class Layout(
-    val root: ComponentNode,
+    val root: ComponentNode? = null,
+    val sections: List<Section> = emptyList(),
     val scaffold: Scaffold? = null,
 )
 
@@ -81,3 +82,32 @@ data class ExecutionContext(
     val parameters: Map<String, String> = emptyMap(),
     val metadata: Map<String, String> = emptyMap(),
 )
+
+@Serializable
+data class Section(
+    val id: String,
+    val content: ComponentNode,
+    val sticky: SectionSticky = SectionSticky.None,
+    val scroll: SectionScroll = SectionScroll(),
+    val visibleIf: Condition? = null,
+)
+
+@Serializable
+data class SectionScroll(
+    val enabled: Boolean = false,
+    val orientation: ScrollOrientation = ScrollOrientation.Vertical,
+    val reverse: Boolean = false,
+    val userScrollEnabled: Boolean = true,
+    val overscroll: Boolean = true,
+    val contentPadding: Float? = null,
+)
+
+@Serializable
+enum class SectionSticky {
+    None, Top, Bottom
+}
+
+@Serializable
+enum class ScrollOrientation {
+    Vertical, Horizontal
+}
