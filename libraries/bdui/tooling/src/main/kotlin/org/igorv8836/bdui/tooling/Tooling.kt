@@ -14,7 +14,11 @@ class SchemaPrinter {
         return builder.toString()
     }
 
-    private fun render(node: ComponentNode, indent: Int): String {
+    private fun render(node: ComponentNode?, indent: Int): String {
+        if (node == null) {
+            val prefix = "  ".repeat(indent)
+            return "$prefix- <empty>"
+        }
         val prefix = "  ".repeat(indent)
         val line = when (node) {
             is TextElement -> "$prefix- text(${node.id}) text=${node.text}"

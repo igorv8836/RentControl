@@ -10,6 +10,11 @@ data class CardElement(
     val imageUrl: String? = null,
     val badge: String? = null,
     val actionId: String? = null,
+    val titleColor: Color? = null,
+    val subtitleColor: Color? = null,
+    val badgeTextColor: Color? = null,
+    val badgeBackgroundColor: Color? = null,
+    val backgroundColor: Color? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
@@ -18,6 +23,7 @@ data class CardGridElement(
     override val id: String,
     val items: List<CardElement>,
     val columns: Int = 2,
+    val backgroundColor: Color? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
@@ -26,6 +32,10 @@ data class TabsElement(
     override val id: String,
     val tabs: List<TabItem>,
     val selectedTabId: String? = null,
+    val selectedTabTextColor: Color? = null,
+    val unselectedTabTextColor: Color? = null,
+    val selectedTabBackgroundColor: Color? = null,
+    val unselectedTabBackgroundColor: Color? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
@@ -34,6 +44,12 @@ data class TabItem(
     val title: String,
     val actionId: String,
     val badge: String? = null,
+    val textColor: Color? = null,
+    val selectedTextColor: Color? = null,
+    val backgroundColor: Color? = null,
+    val selectedBackgroundColor: Color? = null,
+    val badgeTextColor: Color? = null,
+    val badgeBackgroundColor: Color? = null,
     val visibleIf: Condition? = null,
 )
 
@@ -44,6 +60,10 @@ data class TextFieldElement(
     val value: String = "",
     val placeholder: String? = null,
     val actionId: String? = null,
+    val textColor: Color? = null,
+    val labelColor: Color? = null,
+    val placeholderColor: Color? = null,
+    val backgroundColor: Color? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
@@ -54,6 +74,9 @@ data class DropdownElement(
     val options: List<String>,
     val selectedIndex: Int? = null,
     val actionId: String? = null,
+    val labelColor: Color? = null,
+    val selectedTextColor: Color? = null,
+    val backgroundColor: Color? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
@@ -64,6 +87,10 @@ data class SliderElement(
     val rangeStart: Float = 0f,
     val rangeEnd: Float = 1f,
     val actionId: String? = null,
+    val textColor: Color? = null,
+    val thumbColor: Color? = null,
+    val activeTrackColor: Color? = null,
+    val inactiveTrackColor: Color? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
@@ -73,6 +100,11 @@ data class SwitchElement(
     val checked: Boolean = false,
     val title: String,
     val actionId: String? = null,
+    val titleColor: Color? = null,
+    val checkedThumbColor: Color? = null,
+    val uncheckedThumbColor: Color? = null,
+    val checkedTrackColor: Color? = null,
+    val uncheckedTrackColor: Color? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
@@ -81,6 +113,10 @@ data class ChipGroupElement(
     override val id: String,
     val chips: List<ChipItem>,
     val singleSelection: Boolean = true,
+    val chipTextColor: Color? = null,
+    val chipBackgroundColor: Color? = null,
+    val selectedChipTextColor: Color? = null,
+    val selectedChipBackgroundColor: Color? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
@@ -89,6 +125,10 @@ data class ChipItem(
     val label: String,
     val selected: Boolean = false,
     val actionId: String? = null,
+    val textColor: Color? = null,
+    val backgroundColor: Color? = null,
+    val selectedTextColor: Color? = null,
+    val selectedBackgroundColor: Color? = null,
     val visibleIf: Condition? = null,
 )
 
@@ -96,6 +136,7 @@ data class ChipItem(
 data class CarouselElement(
     override val id: String,
     val items: List<ComponentNode>,
+    val backgroundColor: Color? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
@@ -105,6 +146,8 @@ data class ModalElement(
     val content: ComponentNode,
     val primaryActionId: String? = null,
     val dismissActionId: String? = null,
+    val backgroundColor: Color? = null,
+    val scrimColor: Color? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
@@ -114,6 +157,9 @@ data class SnackbarElement(
     val message: String,
     val actionText: String? = null,
     val actionId: String? = null,
+    val messageColor: Color? = null,
+    val backgroundColor: Color? = null,
+    val actionTextColor: Color? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
@@ -123,6 +169,9 @@ data class StateElement(
     val state: StateKind,
     val message: String? = null,
     val actionId: String? = null,
+    val textColor: Color? = null,
+    val backgroundColor: Color? = null,
+    val actionTextColor: Color? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
@@ -133,6 +182,8 @@ data class ProgressElement(
     override val id: String,
     val style: ProgressStyle = ProgressStyle.Linear,
     val progress: Float? = null,
+    val indicatorColor: Color? = null,
+    val trackColor: Color? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
@@ -143,5 +194,8 @@ data class MapElement(
     override val id: String,
     val title: String? = null,
     val subtitle: String? = null,
+    val titleColor: Color? = null,
+    val subtitleColor: Color? = null,
+    val backgroundColor: Color? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode

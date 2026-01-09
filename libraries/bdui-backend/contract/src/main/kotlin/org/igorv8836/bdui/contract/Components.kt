@@ -32,11 +32,17 @@ sealed interface ComponentNode {
     val id: String
 }
 
+data class Color(
+    val light: String,
+    val dark: String? = null,
+)
+
 data class Container(
     override val id: String,
     val direction: ContainerDirection,
     val children: List<ComponentNode> = emptyList(),
     val spacing: Float? = null,
+    val backgroundColor: Color? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
@@ -50,6 +56,7 @@ data class TextElement(
     override val id: String,
     val text: String,
     val style: TextStyle = TextStyle.Body,
+    val textColor: Color? = null,
     val semantics: Semantics? = null,
     val template: String? = null,
     val visibleIf: Condition? = null,
@@ -68,6 +75,8 @@ data class ButtonElement(
     val actionId: String,
     val kind: ButtonKind = ButtonKind.Primary,
     val isEnabled: Boolean = true,
+    val textColor: Color? = null,
+    val backgroundColor: Color? = null,
     val semantics: Semantics? = null,
     val enabledIf: Condition? = null,
     val visibleIf: Condition? = null,
@@ -83,6 +92,8 @@ data class ImageElement(
     override val id: String,
     val url: String,
     val description: String? = null,
+    val backgroundColor: Color? = null,
+    val textColor: Color? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
@@ -90,6 +101,7 @@ data class LazyListElement(
     override val id: String,
     val items: List<ComponentNode>,
     val placeholderCount: Int = 0,
+    val backgroundColor: Color? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode
 
@@ -103,7 +115,7 @@ data class SpacerElement(
 data class DividerElement(
     override val id: String,
     val thickness: Float? = null,
-    val color: String? = null,
+    val color: Color? = null,
     val insetStart: Float? = null,
     val visibleIf: Condition? = null,
 ) : ComponentNode
@@ -113,6 +125,9 @@ data class ListItemElement(
     val title: String,
     val subtitle: String? = null,
     val actionId: String? = null,
+    val titleColor: Color? = null,
+    val subtitleColor: Color? = null,
+    val backgroundColor: Color? = null,
     val semantics: Semantics? = null,
     val enabledIf: Condition? = null,
     val visibleIf: Condition? = null,

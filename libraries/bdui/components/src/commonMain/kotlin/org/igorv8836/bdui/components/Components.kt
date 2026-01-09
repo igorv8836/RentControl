@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -43,9 +44,14 @@ import org.igorv8836.bdui.contract.ContainerDirection
 fun TextComponent(
     node: TextElement,
     text: String,
+    textColor: Color? = null,
     modifier: Modifier = Modifier,
 ) {
-    Text(text = text, modifier = modifier)
+    Text(
+        text = text,
+        modifier = modifier,
+        color = textColor ?: Color.Unspecified,
+    )
 }
 
 @Composable
@@ -54,32 +60,49 @@ fun ButtonComponent(
     title: String,
     enabled: Boolean,
     onAction: (String) -> Unit,
+    textColor: Color? = null,
+    backgroundColor: Color? = null,
     modifier: Modifier = Modifier,
 ) {
+    val colors = if (textColor == null && backgroundColor == null) {
+        ButtonDefaults.buttonColors()
+    } else {
+        val container = backgroundColor ?: MaterialTheme.colorScheme.primary
+        val content = textColor ?: MaterialTheme.colorScheme.onPrimary
+        ButtonDefaults.buttonColors(
+            containerColor = container,
+            contentColor = content,
+            disabledContainerColor = container.copy(alpha = 0.12f),
+            disabledContentColor = content.copy(alpha = 0.38f),
+        )
+    }
     Button(
         onClick = { if (enabled) onAction(node.actionId) },
         enabled = enabled,
         modifier = modifier,
+        colors = colors,
     ) {
-        Text(text = title)
+        Text(text = title, color = textColor ?: Color.Unspecified)
     }
 }
 
 @Composable
 fun ImagePlaceholder(
     node: ImageElement,
+    backgroundColor: Color? = null,
+    textColor: Color? = null,
     modifier: Modifier = Modifier,
 ) {
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .height(180.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = backgroundColor ?: MaterialTheme.colorScheme.surfaceVariant,
     ) {
         Text(
             text = node.description.orEmpty(),
             modifier = Modifier.padding(16.dp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = textColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -88,14 +111,16 @@ fun ImagePlaceholder(
 fun ContainerComponent(
     node: Container,
     renderChild: @Composable (ComponentNode, Modifier) -> Unit,
+    backgroundColor: Color? = null,
     modifier: Modifier = Modifier,
 ) {
     val spacing = node.spacing?.dp ?: 8.dp
     val hasLazyChild = node.children.any { it is LazyListElement }
+    val appliedModifier = backgroundColor?.let { modifier.background(it) } ?: modifier
 
     when (node.direction) {
         ContainerDirection.Column -> Column(
-            modifier = modifier,
+            modifier = appliedModifier,
             verticalArrangement = Arrangement.spacedBy(spacing),
         ) {
             node.children.forEach { child ->
@@ -106,7 +131,7 @@ fun ContainerComponent(
         }
 
         ContainerDirection.Row -> Row(
-            modifier = modifier,
+            modifier = appliedModifier,
             horizontalArrangement = Arrangement.spacedBy(spacing),
         ) {
             node.children.forEach { child ->
@@ -114,7 +139,7 @@ fun ContainerComponent(
             }
         }
 
-        ContainerDirection.Overlay -> Box(modifier = modifier) {
+        ContainerDirection.Overlay -> Box(modifier = appliedModifier) {
             node.children.forEach { child ->
                 renderChild(child, Modifier)
             }
@@ -126,6 +151,7 @@ fun ContainerComponent(
 fun LazyListComponent(
     node: LazyListElement,
     renderChild: @Composable (ComponentNode, Modifier) -> Unit,
+    backgroundColor: Color? = null,
     modifier: Modifier = Modifier,
     contentSpacing: Dp = 12.dp,
     onLoadNextPage: (() -> Unit)? = null,
@@ -154,8 +180,9 @@ fun LazyListComponent(
         }
     }
 
+    val appliedModifier = backgroundColor?.let { modifier.background(it) } ?: modifier
     LazyColumn(
-        modifier = modifier,
+        modifier = appliedModifier,
         state = listState,
         verticalArrangement = Arrangement.spacedBy(contentSpacing),
     ) {
@@ -190,11 +217,13 @@ fun SpacerComponent(
 @Composable
 fun DividerComponent(
     node: DividerElement,
+    color: Color? = null,
     modifier: Modifier = Modifier,
 ) {
     Divider(
         modifier = modifier,
         thickness = (node.thickness ?: 1f).dp,
+        color = color ?: MaterialTheme.colorScheme.outline,
     )
 }
 
@@ -205,24 +234,28 @@ fun ListItemComponent(
     subtitle: String?,
     onAction: ((String) -> Unit)?,
     enabled: Boolean,
+    titleColor: Color? = null,
+    subtitleColor: Color? = null,
+    backgroundColor: Color? = null,
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .let { it },
+            .let { base -> backgroundColor?.let { base.background(it) } ?: base },
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
             text = title,
             style = MaterialTheme.typography.bodyLarge,
+            color = titleColor ?: Color.Unspecified,
         )
         subtitle?.let {
             Text(
                 text = it,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = subtitleColor ?: MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         val actionId = node.actionId

@@ -17,12 +17,13 @@ import org.igorv8836.bdui.contract.TextElement
 import org.igorv8836.bdui.contract.TextStyle
 import org.igorv8836.bdui.contract.BottomBar
 import org.igorv8836.bdui.contract.BottomTab
+import org.igorv8836.bdui.contract.Color
 
 /**
  * Container builder scope for nested layout declarations.
  */
 class ContainerScope(
-    private val ctx: RenderContext = RenderContext(),
+    internal val ctx: RenderContext = RenderContext(),
 ) {
     internal val children = mutableListOf<ComponentNode>()
 
@@ -30,6 +31,7 @@ class ContainerScope(
         id: String,
         direction: ContainerDirection = ContainerDirection.Column,
         spacing: Float? = null,
+        backgroundColor: Color? = null,
         visibleIf: Condition? = null,
         block: ContainerScope.() -> Unit = {},
     ): Container {
@@ -39,6 +41,7 @@ class ContainerScope(
             direction = direction,
             spacing = spacing,
             children = scope.children.toList(),
+            backgroundColor = backgroundColor,
             visibleIf = visibleIf,
         ).also { children += it }
     }
@@ -47,6 +50,7 @@ class ContainerScope(
         id: String,
         text: String,
         style: TextStyle = TextStyle.Body,
+        textColor: Color? = null,
         template: String? = null,
         semantics: Semantics? = null,
         visibleIf: Condition? = null,
@@ -54,6 +58,7 @@ class ContainerScope(
         id = id,
         text = text,
         style = style,
+        textColor = textColor,
         semantics = semantics,
         template = template,
         visibleIf = visibleIf,
@@ -65,6 +70,8 @@ class ContainerScope(
         action: Action,
         kind: ButtonKind = ButtonKind.Primary,
         isEnabled: Boolean = true,
+        textColor: Color? = null,
+        backgroundColor: Color? = null,
         enabledIf: Condition? = null,
         visibleIf: Condition? = null,
         semantics: Semantics? = null,
@@ -75,6 +82,8 @@ class ContainerScope(
             actionId = action.id,
             kind = kind,
             isEnabled = isEnabled,
+            textColor = textColor,
+            backgroundColor = backgroundColor,
             semantics = semantics,
             enabledIf = enabledIf,
             visibleIf = visibleIf,
@@ -98,7 +107,7 @@ class ContainerScope(
     fun divider(
         id: String,
         thickness: Float? = null,
-        color: String? = null,
+        color: Color? = null,
         insetStart: Float? = null,
         visibleIf: Condition? = null,
     ): DividerElement = DividerElement(
@@ -113,18 +122,21 @@ class ContainerScope(
         id: String,
         items: List<ComponentNode>,
         placeholderCount: Int = 0,
+        backgroundColor: Color? = null,
         visibleIf: Condition? = null,
         ctx: RenderContext? = this.ctx,
     ): LazyListElement = LazyListElement(
         id = id,
         items = items,
         placeholderCount = placeholderCount,
+        backgroundColor = backgroundColor,
         visibleIf = visibleIf,
     ).also { children += it }
 
     fun list(
         id: String,
         placeholderCount: Int = 0,
+        backgroundColor: Color? = null,
         visibleIf: Condition? = null,
         ctx: RenderContext = this.ctx,
         block: ContainerScope.() -> Unit,
@@ -134,6 +146,7 @@ class ContainerScope(
             id = id,
             items = scope.children.toList(),
             placeholderCount = placeholderCount,
+            backgroundColor = backgroundColor,
             visibleIf = visibleIf,
         )
     }
@@ -143,6 +156,9 @@ class ContainerScope(
         title: String,
         subtitle: String? = null,
         action: Action? = null,
+        titleColor: Color? = null,
+        subtitleColor: Color? = null,
+        backgroundColor: Color? = null,
         semantics: Semantics? = null,
         enabledIf: Condition? = null,
         visibleIf: Condition? = null,
@@ -154,14 +170,33 @@ class ContainerScope(
             title = title,
             subtitle = subtitle,
             actionId = resolvedActionId,
+            titleColor = titleColor,
+            subtitleColor = subtitleColor,
+            backgroundColor = backgroundColor,
             semantics = semantics,
             enabledIf = enabledIf,
             visibleIf = visibleIf,
         ).also { children += it }
     }
 
-    fun bottomBar(selectedTabId: String? = null, block: BottomBarBuilder.() -> Unit): BottomBar {
-        val builder = BottomBarBuilder(selectedTabId, ctx)
+    fun bottomBar(
+        selectedTabId: String? = null,
+        containerColor: Color? = null,
+        selectedIconColor: Color? = null,
+        unselectedIconColor: Color? = null,
+        selectedLabelColor: Color? = null,
+        unselectedLabelColor: Color? = null,
+        block: BottomBarBuilder.() -> Unit,
+    ): BottomBar {
+        val builder = BottomBarBuilder(
+            selected = selectedTabId,
+            ctx = ctx,
+            containerColor = containerColor,
+            selectedIconColor = selectedIconColor,
+            unselectedIconColor = unselectedIconColor,
+            selectedLabelColor = selectedLabelColor,
+            unselectedLabelColor = unselectedLabelColor,
+        )
         builder.block()
         return builder.build()
     }
@@ -170,6 +205,11 @@ class ContainerScope(
 class BottomBarBuilder(
     private val selected: String?,
     private val ctx: RenderContext,
+    private val containerColor: Color?,
+    private val selectedIconColor: Color?,
+    private val unselectedIconColor: Color?,
+    private val selectedLabelColor: Color?,
+    private val unselectedLabelColor: Color?,
 ) {
     private val tabs = mutableListOf<BottomTab>()
 
@@ -179,6 +219,8 @@ class BottomBarBuilder(
         action: Action,
         iconUrl: String? = null,
         badge: String? = null,
+        badgeTextColor: Color? = null,
+        badgeBackgroundColor: Color? = null,
         visibleIf: org.igorv8836.bdui.contract.Condition? = null,
     ) {
         val resolvedActionId = action.id
@@ -189,6 +231,8 @@ class BottomBarBuilder(
             actionId = resolvedActionId,
             iconUrl = iconUrl,
             badge = badge,
+            badgeTextColor = badgeTextColor,
+            badgeBackgroundColor = badgeBackgroundColor,
             visibleIf = visibleIf,
         )
     }
@@ -196,8 +240,15 @@ class BottomBarBuilder(
     fun build(): BottomBar = BottomBar(
         tabs = tabs.toList(),
         selectedTabId = selected,
+        containerColor = containerColor,
+        selectedIconColor = selectedIconColor,
+        unselectedIconColor = unselectedIconColor,
+        selectedLabelColor = selectedLabelColor,
+        unselectedLabelColor = unselectedLabelColor,
     )
 }
+
+fun color(light: String, dark: String? = null): Color = Color(light = light, dark = dark)
 
 /**
  * Helper to quickly build a container tree as root.
@@ -206,6 +257,7 @@ fun container(
     id: String,
     direction: ContainerDirection = ContainerDirection.Column,
     spacing: Float? = null,
+    backgroundColor: Color? = null,
     visibleIf: Condition? = null,
     ctx: RenderContext = RenderContext(),
     block: ContainerScope.() -> Unit = {},
@@ -215,6 +267,7 @@ fun container(
         id = id,
         direction = direction,
         spacing = spacing,
+        backgroundColor = backgroundColor,
         visibleIf = visibleIf,
         children = scope.children.toList(),
     )

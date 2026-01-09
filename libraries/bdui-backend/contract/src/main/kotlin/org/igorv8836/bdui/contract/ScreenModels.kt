@@ -27,6 +27,11 @@ data class Scaffold(
 data class BottomBar(
     val tabs: List<BottomTab>,
     val selectedTabId: String? = null,
+    val containerColor: Color? = null,
+    val selectedIconColor: Color? = null,
+    val unselectedIconColor: Color? = null,
+    val selectedLabelColor: Color? = null,
+    val unselectedLabelColor: Color? = null,
 )
 
 data class BottomTab(
@@ -35,6 +40,8 @@ data class BottomTab(
     val actionId: String,
     val iconUrl: String? = null,
     val badge: String? = null,
+    val badgeTextColor: Color? = null,
+    val badgeBackgroundColor: Color? = null,
     val label: ComponentNode? = null,
     val icon: ComponentNode? = null,
     val visibleIf: Condition? = null,

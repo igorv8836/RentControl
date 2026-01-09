@@ -47,6 +47,9 @@ import org.igorv8836.bdui.components.SnackbarComponent
 import org.igorv8836.bdui.components.StateComponent
 import org.igorv8836.bdui.components.ProgressComponent
 import org.igorv8836.bdui.components.MapPlaceholderComponent
+import org.igorv8836.bdui.components.ModalComponent
+import org.igorv8836.bdui.components.TabVisualStyle
+import androidx.compose.foundation.isSystemInDarkTheme
 
 internal data class PaginationConfig(
     val prefetchDistance: Int,
@@ -61,32 +64,47 @@ internal fun RenderNode(
     resolver: BindingResolver,
     modifier: Modifier = Modifier,
     pagination: PaginationConfig? = null,
+    isDark: Boolean = isSystemInDarkTheme(),
 ) {
     when (node) {
         is TextElement -> {
             if (!resolver.isVisible(node.visibleIf)) return
             val text = resolver.text(node.text, node.template)
-            TextComponent(node = node, text = text, modifier = modifier)
+            TextComponent(
+                node = node,
+                text = text,
+                textColor = parseColor(node.textColor, isDark),
+                modifier = modifier,
+            )
         }
         is ButtonElement -> ButtonComponent(
             node = node,
             title = resolver.text(node.title, null),
             enabled = resolver.isEnabled(node.isEnabled, node.enabledIf),
             onAction = onAction,
+            textColor = parseColor(node.textColor, isDark),
+            backgroundColor = parseColor(node.backgroundColor, isDark),
             modifier = modifier,
         )
 
         is ImageElement -> if (resolver.isVisible(node.visibleIf)) {
-            ImagePlaceholder(node = node, modifier = modifier)
+            ImagePlaceholder(
+                node = node,
+                backgroundColor = parseColor(node.backgroundColor, isDark),
+                textColor = parseColor(node.textColor, isDark),
+                modifier = modifier,
+            )
         }
         is Container -> if (resolver.isVisible(node.visibleIf)) {
             ContainerComponent(
                 node = node,
+                backgroundColor = parseColor(node.backgroundColor, isDark),
                 renderChild = { child, childModifier ->
                     RenderNode(
                         node = child,
                         onAction = onAction,
                         resolver = resolver,
+                        isDark = isDark,
                         modifier = childModifier,
                         pagination = pagination,
                     )
@@ -98,11 +116,13 @@ internal fun RenderNode(
         is LazyListElement -> if (resolver.isVisible(node.visibleIf)) {
             LazyListComponent(
                 node = node,
+                backgroundColor = parseColor(node.backgroundColor, isDark),
                 renderChild = { child, childModifier ->
                     RenderNode(
                         node = child,
                         onAction = onAction,
                         resolver = resolver,
+                        isDark = isDark,
                         modifier = childModifier,
                         pagination = pagination,
                     )
@@ -117,7 +137,11 @@ internal fun RenderNode(
             SpacerComponent(node = node, modifier = modifier)
         }
         is DividerElement -> if (resolver.isVisible(node.visibleIf)) {
-            DividerComponent(node = node, modifier = modifier)
+            DividerComponent(
+                node = node,
+                color = parseColor(node.color, isDark),
+                modifier = modifier,
+            )
         }
         is ListItemElement -> if (resolver.isVisible(node.visibleIf)) {
             ListItemComponent(
@@ -126,17 +150,26 @@ internal fun RenderNode(
                 subtitle = node.subtitle?.let { key -> resolver.text(key, null) },
                 onAction = { id -> onAction(id) },
                 enabled = resolver.isEnabled(true, node.enabledIf),
+                titleColor = parseColor(node.titleColor, isDark),
+                subtitleColor = parseColor(node.subtitleColor, isDark),
+                backgroundColor = parseColor(node.backgroundColor, isDark),
                 modifier = modifier,
             )
         }
         is CardGridElement -> if (resolver.isVisible(node.visibleIf)) {
             CardGridComponent(
                 node = node,
+                backgroundColor = parseColor(node.backgroundColor, isDark),
                 renderCard = { card ->
                     if (resolver.isVisible(card.visibleIf)) {
                         CardComponent(
                             node = card,
                             onAction = card.actionId?.let { id -> { onAction(id) } },
+                            titleColor = parseColor(card.titleColor, isDark),
+                            subtitleColor = parseColor(card.subtitleColor, isDark),
+                            badgeTextColor = parseColor(card.badgeTextColor, isDark),
+                            badgeBackgroundColor = parseColor(card.badgeBackgroundColor, isDark),
+                            backgroundColor = parseColor(card.backgroundColor, isDark),
                         )
                     }
                 },
@@ -148,6 +181,11 @@ internal fun RenderNode(
                 node = node,
                 modifier = modifier,
                 onAction = { actionId -> onAction(actionId) },
+                titleColor = parseColor(node.titleColor, isDark),
+                subtitleColor = parseColor(node.subtitleColor, isDark),
+                badgeTextColor = parseColor(node.badgeTextColor, isDark),
+                badgeBackgroundColor = parseColor(node.badgeBackgroundColor, isDark),
+                backgroundColor = parseColor(node.backgroundColor, isDark),
             )
         }
         is TabsElement -> if (resolver.isVisible(node.visibleIf)) {
@@ -156,6 +194,26 @@ internal fun RenderNode(
                 node = node.copy(tabs = visibleTabs),
                 modifier = modifier,
                 onAction = onAction,
+                resolveTabColors = { tab, selected ->
+                    val labelColor = parseColor(
+                        if (selected) tab.selectedTextColor ?: node.selectedTabTextColor
+                        else tab.textColor ?: node.unselectedTabTextColor,
+                        isDark,
+                    )
+                    val containerColor = parseColor(
+                        if (selected) tab.selectedBackgroundColor ?: node.selectedTabBackgroundColor
+                        else tab.backgroundColor ?: node.unselectedTabBackgroundColor,
+                        isDark,
+                    )
+                    val badgeContainerColor = parseColor(tab.badgeBackgroundColor, isDark)
+                    val badgeContentColor = parseColor(tab.badgeTextColor, isDark)
+                    TabVisualStyle(
+                        containerColor = containerColor,
+                        labelColor = labelColor,
+                        badgeContainerColor = badgeContainerColor,
+                        badgeContentColor = badgeContentColor,
+                    )
+                },
             )
         }
         is TextFieldElement -> if (resolver.isVisible(node.visibleIf)) {
@@ -163,6 +221,10 @@ internal fun RenderNode(
                 node = node,
                 modifier = modifier,
                 onAction = { id -> id?.let(onAction) },
+                textColor = parseColor(node.textColor, isDark),
+                labelColor = parseColor(node.labelColor, isDark),
+                placeholderColor = parseColor(node.placeholderColor, isDark),
+                backgroundColor = parseColor(node.backgroundColor, isDark),
             )
         }
         is DropdownElement -> if (resolver.isVisible(node.visibleIf)) {
@@ -170,6 +232,9 @@ internal fun RenderNode(
                 node = node,
                 modifier = modifier,
                 onAction = { id -> id?.let(onAction) },
+                labelColor = parseColor(node.labelColor, isDark),
+                selectedTextColor = parseColor(node.selectedTextColor, isDark),
+                backgroundColor = parseColor(node.backgroundColor, isDark),
             )
         }
         is SliderElement -> if (resolver.isVisible(node.visibleIf)) {
@@ -177,6 +242,10 @@ internal fun RenderNode(
                 node = node,
                 modifier = modifier,
                 onAction = { id -> id?.let(onAction) },
+                textColor = parseColor(node.textColor, isDark),
+                thumbColor = parseColor(node.thumbColor, isDark),
+                activeTrackColor = parseColor(node.activeTrackColor, isDark),
+                inactiveTrackColor = parseColor(node.inactiveTrackColor, isDark),
             )
         }
         is SwitchElement -> if (resolver.isVisible(node.visibleIf)) {
@@ -184,6 +253,11 @@ internal fun RenderNode(
                 node = node,
                 modifier = modifier,
                 onAction = { id -> id?.let(onAction) },
+                titleColor = parseColor(node.titleColor, isDark),
+                checkedThumbColor = parseColor(node.checkedThumbColor, isDark),
+                uncheckedThumbColor = parseColor(node.uncheckedThumbColor, isDark),
+                checkedTrackColor = parseColor(node.checkedTrackColor, isDark),
+                uncheckedTrackColor = parseColor(node.uncheckedTrackColor, isDark),
             )
         }
         is ChipGroupElement -> if (resolver.isVisible(node.visibleIf)) {
@@ -191,16 +265,36 @@ internal fun RenderNode(
                 node = node,
                 modifier = modifier,
                 onAction = { actionId -> actionId?.let(onAction) },
+                resolveChipColors = { chip, selected ->
+                    val fallbackText = if (selected) node.selectedChipTextColor else node.chipTextColor
+                    val fallbackBackground =
+                        if (selected) node.selectedChipBackgroundColor else node.chipBackgroundColor
+                    TabVisualStyle(
+                        containerColor = parseColor(
+                            if (selected) chip.selectedBackgroundColor ?: fallbackBackground else chip.backgroundColor
+                                ?: fallbackBackground,
+                            isDark,
+                        ),
+                        labelColor = parseColor(
+                            if (selected) chip.selectedTextColor ?: fallbackText else chip.textColor ?: fallbackText,
+                            isDark,
+                        ),
+                        badgeContainerColor = null,
+                        badgeContentColor = null,
+                    )
+                },
             )
         }
         is CarouselElement -> if (resolver.isVisible(node.visibleIf)) {
             CarouselComponent(
                 node = node,
+                backgroundColor = parseColor(node.backgroundColor, isDark),
                 renderChild = { child ->
                     RenderNode(
                         node = child,
                         onAction = onAction,
                         resolver = resolver,
+                        isDark = isDark,
                         modifier = Modifier,
                         pagination = pagination,
                     )
@@ -209,22 +303,23 @@ internal fun RenderNode(
             )
         }
         is ModalElement -> if (resolver.isVisible(node.visibleIf)) {
-            CardComponent(
-                node = CardElement(
-                    id = node.id,
-                    title = "",
-                    subtitle = null,
-                    actionId = node.primaryActionId,
-                ),
+            ModalComponent(
+                node = node,
                 modifier = modifier,
-                onAction = { id -> onAction(id) },
-            )
-            RenderNode(
-                node = node.content,
-                onAction = onAction,
-                resolver = resolver,
-                modifier = modifier,
-                pagination = pagination,
+                backgroundColor = parseColor(node.backgroundColor, isDark),
+                scrimColor = parseColor(node.scrimColor, isDark),
+                onPrimaryAction = node.primaryActionId?.let { id -> { onAction(id) } },
+                onDismissAction = node.dismissActionId?.let { id -> { onAction(id) } },
+                content = {
+                    RenderNode(
+                        node = node.content,
+                        onAction = onAction,
+                        resolver = resolver,
+                        isDark = isDark,
+                        modifier = Modifier,
+                        pagination = pagination,
+                    )
+                },
             )
         }
         is SnackbarElement -> if (resolver.isVisible(node.visibleIf)) {
@@ -232,6 +327,9 @@ internal fun RenderNode(
                 node = node,
                 modifier = modifier,
                 onAction = { id -> id?.let(onAction) },
+                messageColor = parseColor(node.messageColor, isDark),
+                backgroundColor = parseColor(node.backgroundColor, isDark),
+                actionTextColor = parseColor(node.actionTextColor, isDark),
             )
         }
         is StateElement -> if (resolver.isVisible(node.visibleIf)) {
@@ -239,18 +337,26 @@ internal fun RenderNode(
                 node = node,
                 modifier = modifier,
                 onAction = { id -> id?.let(onAction) },
+                textColor = parseColor(node.textColor, isDark),
+                backgroundColor = parseColor(node.backgroundColor, isDark),
+                actionTextColor = parseColor(node.actionTextColor, isDark),
             )
         }
         is ProgressElement -> if (resolver.isVisible(node.visibleIf)) {
             ProgressComponent(
                 node = node,
                 modifier = modifier,
+                indicatorColor = parseColor(node.indicatorColor, isDark),
+                trackColor = parseColor(node.trackColor, isDark),
             )
         }
         is MapElement -> if (resolver.isVisible(node.visibleIf)) {
             MapPlaceholderComponent(
                 node = node,
                 modifier = modifier,
+                titleColor = parseColor(node.titleColor, isDark),
+                subtitleColor = parseColor(node.subtitleColor, isDark),
+                backgroundColor = parseColor(node.backgroundColor, isDark),
             )
         }
     }
