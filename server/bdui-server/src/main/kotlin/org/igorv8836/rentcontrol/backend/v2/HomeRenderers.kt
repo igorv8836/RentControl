@@ -3,6 +3,7 @@ package org.igorv8836.rentcontrol.backend.v2
 import org.igorv8836.bdui.backend.dsl.container
 import org.igorv8836.bdui.backend.dsl.incrementVariableAction
 import org.igorv8836.bdui.backend.core.RenderContext
+import org.igorv8836.bdui.backend.dsl.color
 import org.igorv8836.bdui.backend.runtime.engine.Renderer
 import org.igorv8836.bdui.contract.ButtonKind
 import org.igorv8836.bdui.contract.ComponentNode
@@ -34,6 +35,10 @@ class HomeHeaderRenderer : Renderer<HomeHeaderData, ComponentNode> {
             title = "Open catalog",
             action = goCatalog,
             kind = ButtonKind.Primary,
+            textColor = color(
+                light = "#FFFF00",
+                dark = "#000000",
+            ),
         )
     }
 }

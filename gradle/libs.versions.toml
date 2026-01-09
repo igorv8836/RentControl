@@ -18,6 +18,10 @@ serialization = "1.7.3"
 ktor = "3.3.3"
 logback = "1.5.21"
 compose-ui = "1.7.3"
+hikari = "5.1.0"
+flyway = "10.21.0"
+postgres = "42.7.4"
+exposed = "0.57.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -46,6 +50,15 @@ ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "k
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-java = { module = "io.ktor:ktor-client-java", version.ref = "ktor" }
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgres" }
+hikariCp = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
+flyway = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
+flywayDatabasePostgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
+exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
+exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
+exposed-java-time = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
+exposed-json = { module = "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

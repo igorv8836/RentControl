@@ -12,7 +12,9 @@ This is a Kotlin Multiplatform project targeting Android, iOS, Desktop (JVM), Se
 * [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
   you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
 
-* [/server](./server/src/main/kotlin) is for the Ktor server application.
+* [/server](./server) groups backend services:
+  - [/server/bdui-server](./server/bdui-server) is the Ktor service that renders BDUI screens.
+  - [/server/rent-control-server](./server/rent-control-server) is the REST/API service with Postgres migrations.
 
 * [/shared](./shared/src) is for the code that will be shared between all targets in the project.
   The most important subfolder is [commonMain](./shared/src/commonMain/kotlin). If preferred, you
@@ -44,18 +46,27 @@ in your IDE’s toolbar or run it directly from the terminal:
   .\gradlew.bat :composeApp:run
   ```
 
-### Build and Run Server
+### Build and Run Servers
 
-To build and run the development version of the server, use the run configuration from the run widget
-in your IDE’s toolbar or run it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :server:run
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :server:run
-  ```
+- BDUI server (serves BDUI JSON):
+  - macOS/Linux
+    ```shell
+    ./gradlew :server:bdui-server:run
+    ```
+  - Windows
+    ```shell
+    .\gradlew.bat :server:bdui-server:run
+    ```
+- Rent Control API server (requires Postgres; see `server/rent-control-server/src/main/resources/application.conf` for defaults/env vars):
+  - macOS/Linux
+    ```shell
+    ./gradlew :server:rent-control-server:run
+    ```
+  - Windows
+    ```shell
+    .\gradlew.bat :server:rent-control-server:run
+    ```
+  - Tables are defined with Exposed DSL and will be created/updated automatically on startup if they are missing.
 
 ### Build and Run iOS Application
 

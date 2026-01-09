@@ -35,6 +35,8 @@ plugins {
 include(
     ":composeApp",
     ":server",
+    ":server:bdui-server",
+    ":server:rent-control-server",
     ":shared",
     ":libraries:bdui",
     ":libraries:bdui:contract",
