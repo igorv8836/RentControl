@@ -23,10 +23,10 @@
 
 ### Проектная структура и инфраструктура
 
-- [ ] Разбить API service на модули/пакеты (auth/users/ref/objects/inspections/defects/expenses/meters/attachments/notifications/sync/audit).
-- [ ] Настроить `ContentNegotiation` (kotlinx.serialization), единый `Json` (strictness/unknown keys).
-- [ ] Настроить `StatusPages` с маппингом исключений → стандарт ошибок.
-- [ ] Настроить `CallId`/`traceId` (генерация/проброс) и структурные логи.
+- [x] Разбить API service на модули/пакеты (auth/users/ref/objects/inspections/defects/expenses/meters/attachments/notifications/sync/audit).
+- [x] Настроить `ContentNegotiation` (kotlinx.serialization), единый `Json` (strictness/unknown keys).
+- [x] Настроить `StatusPages` с маппингом исключений → стандарт ошибок.
+- [x] Настроить `CallId`/`traceId` (генерация/проброс) и структурные логи.
 - [ ] Настроить конфиг (env + `application.conf`) и profiles (dev/test/prod).
 - [ ] Подготовить локальный dev‑стенд (docker compose: Postgres + optional MinIO + mail mock).
 - [ ] Добавить seed/test fixtures для локальной разработки (данные для ролей/справочников/шаблонов).
@@ -41,9 +41,9 @@
 
 ### Security
 
-- [ ] Выбрать алгоритм хеширования пароля (Argon2id/bcrypt) + параметры и обновление параметров со временем.
-- [ ] Реализовать JWT (access) + refresh (rotation, revoke) или выбранную альтернативу.
-- [ ] Зафиксировать поток: BDUI-server не валидирует токен локально, а на каждый запрос вызывает API service (например `GET /me`) для валидации access‑токена и получения user context.
+- [x] Выбрать алгоритм хеширования пароля (Argon2id/bcrypt) + параметры и обновление параметров со временем.
+- [x] Реализовать JWT (access) + refresh (rotation, revoke) или выбранную альтернативу.
+- [x] Зафиксировать поток: BDUI-server не валидирует токен локально, а на каждый запрос вызывает API service (например `GET /me`) для валидации access‑токена и получения user context.
 - [ ] Реализовать RBAC‑проверки на уровне маршрутов/сервисов.
 - [ ] Добавить rate limiting для auth/reset/OTP и защиту от brute force.
 - [ ] Добавить политики блокировки аккаунта и журналирование auth‑событий.
@@ -52,7 +52,7 @@
 ### Observability
 
 - [ ] Метрики (Prometheus/Micrometer): latency по эндпоинтам, ошибки, DB pool, очередь background jobs.
-- [ ] Healthchecks: `/health`, `/health/db` (readiness/liveness), зависимость от storage/email/push (опционально).
+- [x] Healthchecks: `/health`, `/health/db` (readiness/liveness), зависимость от storage/email/push (опционально).
 - [ ] Корреляция: traceId в логах и в ответах ошибок.
 
 ---
@@ -61,20 +61,20 @@
 
 ### Модель данных
 
-- [ ] Таблицы/структуры: пользователи, статусы, OTP коды (регистрация/сброс), refresh‑сессии, лимиты попыток.
-- [ ] Политика TTL для OTP и refresh, правила повторной отправки (cooldown).
+- [x] Таблицы/структуры: пользователи, статусы, OTP коды (регистрация/сброс), refresh‑сессии, лимиты попыток.
+- [x] Политика TTL для OTP и refresh, правила повторной отправки (cooldown).
 
 ### Эндпоинты
 
-- [ ] `POST /auth/register` — регистрация + генерация OTP + отправка письма.
-- [ ] `POST /auth/confirm` — подтверждение OTP + активация + выдача токенов.
-- [ ] `POST /auth/login` — логин + выдача токенов.
-- [ ] `POST /auth/refresh` — обновление access по refresh + rotation.
-- [ ] Поток refresh через BDUI-server: клиент хранит refresh‑токен и вызывает `/auth/refresh` через BDUI-server (проксирование без изменения тела/заголовков).
-- [ ] `POST /auth/logout` — отзыв текущей refresh‑сессии.
-- [ ] `POST /auth/password/reset/request` — OTP на сброс пароля.
-- [ ] `POST /auth/password/reset/confirm` — подтверждение OTP + установка нового пароля.
-- [ ] Mock‑реализация OTP доставки для dev/test (получение кода без реальной почты) + контракт тестов на заменяемость реализаций.
+- [x] `POST /auth/register` — регистрация + генерация OTP + отправка письма.
+- [x] `POST /auth/confirm` — подтверждение OTP + активация + выдача токенов.
+- [x] `POST /auth/login` — логин + выдача токенов.
+- [x] `POST /auth/refresh` — обновление access по refresh + rotation.
+- [x] Поток refresh через BDUI-server: клиент хранит refresh‑токен и вызывает `/auth/refresh` через BDUI-server (проксирование без изменения тела/заголовков).
+- [x] `POST /auth/logout` — отзыв текущей refresh‑сессии.
+- [x] `POST /auth/password/reset/request` — OTP на сброс пароля.
+- [x] `POST /auth/password/reset/confirm` — подтверждение OTP + установка нового пароля.
+- [x] Mock‑реализация OTP доставки для dev/test (получение кода без реальной почты) + контракт тестов на заменяемость реализаций.
 
 ---
 
@@ -82,10 +82,10 @@
 
 ### `/me`
 
-- [ ] `GET /me` — профиль, роль, настройки.
+- [x] `GET /me` — профиль, роль, настройки.
 - [ ] `PATCH /me` — обновление профиля/настроек (язык/тема/уведомления/контакты + настройки sync конфликтов).
 - [ ] Зафиксировать поля настроек sync в профиле (пример): `sync.autoResolveConflicts` + `sync.conflictStrategy = lastWriteWins` (или аналогичная схема).
-- [ ] `POST /me/sessions/logout-all` — отзыв всех сессий пользователя.
+- [x] `POST /me/sessions/logout-all` — отзыв всех сессий пользователя.
 
 ### `/users` (администрирование/назначения)
 

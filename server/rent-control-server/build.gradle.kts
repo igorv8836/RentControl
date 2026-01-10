@@ -1,36 +1,25 @@
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+
 plugins {
-    alias(libs.plugins.kotlinJvm)
-    alias(libs.plugins.ktor)
-    application
+    base
 }
 
 group = "org.igorv8836.rentcontrol"
 version = "1.0.0"
 
-application {
-    mainClass.set("org.igorv8836.rentcontrol.server.RentControlApplicationKt")
+subprojects {
+    group = rootProject.group
+    version = rootProject.version
 
-    val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+    plugins.withId("org.jetbrains.kotlin.jvm") {
+        the<KotlinJvmProjectExtension>().jvmToolchain(17)
+    }
 }
 
-kotlin {
-    jvmToolchain(17)
+tasks.register("test") {
+    dependsOn(subprojects.mapNotNull { it.tasks.findByName("test") })
 }
 
-dependencies {
-    implementation(libs.logback)
-    implementation(libs.ktor.serverCore)
-    implementation(libs.ktor.serverNetty)
-    implementation(libs.postgresql)
-    implementation(libs.hikariCp)
-    implementation(libs.exposed.core)
-    implementation(libs.exposed.dao)
-    implementation(libs.exposed.jdbc)
-    implementation(libs.exposed.java.time)
-    implementation(libs.exposed.json)
-    implementation(libs.kotlinx.serialization.json)
-
-    testImplementation(libs.ktor.serverTestHost)
-    testImplementation(libs.kotlin.testJunit)
+tasks.named("check") {
+    dependsOn(subprojects.mapNotNull { it.tasks.findByName("check") })
 }
