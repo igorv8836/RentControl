@@ -83,7 +83,7 @@
 ### `/me`
 
 - [x] `GET /me` — профиль, роль, настройки.
-- [ ] `PATCH /me` — обновление профиля/настроек (язык/тема/уведомления/контакты + настройки sync конфликтов).
+- [x] `PATCH /me` — обновление профиля/настроек (язык/тема/уведомления/контакты + настройки sync конфликтов).
 - [ ] Зафиксировать поля настроек sync в профиле (пример): `sync.autoResolveConflicts` + `sync.conflictStrategy = lastWriteWins` (или аналогичная схема).
 - [x] `POST /me/sessions/logout-all` — отзыв всех сессий пользователя.
 
@@ -117,12 +117,13 @@
 
 ### Объекты (`/objects/*`)
 
-- [ ] `GET /objects` — поиск/фильтры/сортировка, пагинация.
-- [ ] `POST /objects` — создание объекта.
-- [ ] `GET /objects/{objectId}` — карточка + агрегаты (дефекты/осмотры/расходы/показания).
-- [ ] `PATCH /objects/{objectId}` — редактирование.
-- [ ] `POST /objects/{objectId}/archive`
-- [ ] `POST /objects/{objectId}/unarchive`
+- [x] `GET /objects` — поиск/фильтры/сортировка, пагинация.
+- [x] `POST /objects` — создание объекта.
+- [x] `GET /objects/{objectId}` — карточка объекта (основные поля + арендатор).
+- [ ] `GET /objects/{objectId}` — агрегаты (дефекты/осмотры/расходы/показания) в ответе.
+- [x] `PATCH /objects/{objectId}` — редактирование.
+- [x] `POST /objects/{objectId}/archive`
+- [x] `POST /objects/{objectId}/unarchive`
 - [ ] `GET /objects/{objectId}/activity` — журнал активности/событий по объекту.
 
 ### Арендаторы (`/tenants/*` + link/unlink)

@@ -14,6 +14,7 @@ object PropertiesTable : LongIdTable("properties") {
     val ownerId = reference("owner_id", UsersTable)
     val tenantId = reference("tenant_id", UsersTable, onDelete = ReferenceOption.SET_NULL).nullable()
     val notes = text("notes").nullable()
+    val archivedAt = timestampWithTimeZone("archived_at").nullable()
     val createdAt = timestampWithTimeZone("created_at").defaultExpression(CurrentTimestampWithTimeZone)
     val updatedAt = timestampWithTimeZone("updated_at").defaultExpression(CurrentTimestampWithTimeZone)
 
@@ -21,6 +22,7 @@ object PropertiesTable : LongIdTable("properties") {
         check("properties_status_check") { status inList listOf("available", "leased") }
         index("idx_properties_owner_id", false, ownerId)
         index("idx_properties_tenant_id", false, tenantId)
+        index("idx_properties_archived_at", false, archivedAt)
     }
 }
 

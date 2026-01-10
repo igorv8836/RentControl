@@ -1,53 +1,57 @@
 # Структура модулей API service
 
-Все “модули” API service находятся внутри одного Gradle‑модуля: `server/rent-control-server` и оформляются как **пакеты/фичи** (feature modules) внутри `src/main/kotlin`.
+API service оформлен как **Gradle multi-module** внутри `server/rent-control-server`, чтобы:
+- доменные фичи развивались независимо (быстрее сборка, проще зависимости)
+- инфраструктура (`foundation`) переиспользовалась без копипасты
+- `app` оставался тонким entrypoint (wiring + routing)
 
-Цель: единый шаблон для всех доменов (auth/objects/inspections/…), чтобы код было легко:
-- расширять без “больших файлов”
-- тестировать по уровням (unit → api → integration)
-- сопровождать без циклических зависимостей
+Цель: единый шаблон для всех доменов (auth/objects/inspections/…), чтобы код было легко расширять, тестировать и сопровождать без циклических зависимостей.
 
 ---
 
-## 1) Пакеты верхнего уровня (`server/rent-control-server`)
+## 1) Gradle‑модули верхнего уровня (`server/rent-control-server`)
 
 Рекомендуемая структура:
 
 ```
 server/rent-control-server/
-  src/main/kotlin/org/igorv8836/rentcontrol/server/
-    app/                 # bootstrap, routing, ktor plugins, module registration
-    foundation/          # общие вещи: errors, auth context, db, pagination, config, time
-    modules/             # feature modules (доменные модули)
-      auth/
-      me/
-      users/
-      ref/
-      objects/
-      tenants/
-      inspections/
-      defects/
-      expenses/
-      meters/
-      attachments/
-      notifications/
-      sync/
-      audit/
-    integrations/        # внешние интеграции (реализации портов): otp/mock, storage/local|cdn, push/fcm
-  src/test/kotlin/...    # тесты зеркалят пакеты
-  src/main/resources/
-    application.conf
-    db/migration/        # миграции (если используем Flyway/Liquibase)
+  build.gradle.kts        # агрегатор (group/version, общие задачи)
+  app/                    # entrypoint: Ktor app, routing, DI wiring, resources
+    build.gradle.kts
+    src/main/kotlin/org/igorv8836/rentcontrol/server/app/
+    src/main/resources/
+      application.conf
+      logback.xml
+  foundation/             # инфраструктура: errors/http/security/db и общие типы
+    build.gradle.kts
+    src/main/kotlin/org/igorv8836/rentcontrol/server/foundation/
+  integrations/           # внешние интеграции (реализации портов): otp/mock, storage/local|cdn, push/fcm
+    build.gradle.kts
+    src/main/kotlin/org/igorv8836/rentcontrol/server/integrations/
+  modules/                # доменные фичи (каждая — отдельный Gradle‑модуль)
+    auth/
+      build.gradle.kts
+      src/main/kotlin/org/igorv8836/rentcontrol/server/modules/auth/
+    me/
+      build.gradle.kts
+      src/main/kotlin/org/igorv8836/rentcontrol/server/modules/me/
+    users/
+      build.gradle.kts
+      src/main/kotlin/org/igorv8836/rentcontrol/server/modules/users/
+    objects/
+      build.gradle.kts
+      src/main/kotlin/org/igorv8836/rentcontrol/server/modules/objects/
+    ref/ ...              # будущие модули по `docs/server-api.md`
 ```
 
-### Роли пакетов
+### Роли Gradle‑модулей
 
 - `app/`
   - поднимает Ktor, подключает плагины, собирает зависимости (manual DI), регистрирует роуты модулей.
 - `foundation/`
-  - общие типы и инфраструктура, которые нужны всем модулям (ошибки, транзакции, контекст пользователя, пагинация, idempotency, время/clock).
-- `modules/<name>/`
-  - доменная логика и HTTP слой конкретной фичи.
+  - общие типы и инфраструктура, которые нужны всем фичам (ошибки, HTTP, auth context, DB, time).
+- `modules/<name>/` (Gradle‑модуль)
+  - доменная логика и HTTP слой конкретной фичи (роуты/DTO, сервисы, репозитории).
 - `integrations/`
   - конкретные реализации внешних зависимостей (сейчас: mock OTP, позже SMTP; сейчас: storage local/CDN; push: FCM).
 
@@ -79,28 +83,24 @@ server/rent-control-server/
 Один модуль (фича) держим “вертикальным слайсом”:
 
 ```
-modules/<feature>/
-  api/                   # Ktor routes + request/response DTO + validation
-    <Feature>Routes.kt
-    dto/
-      ...
-  domain/                # use-cases, бизнес-правила, статусы, политики
-    model/
-      ...
-    service/
-      <Feature>Service.kt
-    policy/
-      ...
-    port/                # интерфейсы внешних зависимостей (storage/email/push/clock)
-      ...
-  data/                  # репозитории, DB маппинг, Exposed queries
-    repo/
-      <Feature>Repository.kt
-      Exposed<Feature>Repository.kt
-    db/
-      <Feature>Tables.kt (или отдельные файлы таблиц)
-  module/                # сборка зависимостей/регистрация роутов модуля
-    <Feature>Module.kt    # содержит функцию вида `fun Route.<feature>Module(...)`
+server/rent-control-server/modules/<feature>/
+  build.gradle.kts
+  src/main/kotlin/org/igorv8836/rentcontrol/server/modules/<feature>/
+    api/                 # Ktor routes + request/response DTO + validation
+      dto/
+        ...
+    domain/              # use-cases, бизнес-правила, статусы, политики
+      model/
+        ...
+      service/
+        <Feature>Service.kt
+      port/
+        ...
+    data/                # репозитории, DB маппинг, Exposed queries
+      repo/
+        Exposed<Feature>Repository.kt
+    module/              # Ktor registration: `fun Route.<feature>Module(...)`
+      <Feature>Module.kt
 ```
 
 Правило зависимостей внутри фичи:
@@ -114,43 +114,16 @@ modules/<feature>/
 ## 4) Пример: `modules/auth` (структура одного модуля)
 
 ```
-modules/auth/
-  api/
-    AuthRoutes.kt
-    dto/
-      RegisterRequest.kt
-      ConfirmRequest.kt
-      LoginRequest.kt
-      RefreshRequest.kt
-      TokenPairResponse.kt
-  domain/
-    model/
-      UserId.kt
-      SessionId.kt
-      TokenPair.kt
-      OtpPurpose.kt
-    policy/
-      PasswordPolicy.kt
-      AuthRateLimitPolicy.kt
-    port/
-      OtpSender.kt              # интерфейс (реализации: mock сейчас, smtp позже)
-      PasswordHasher.kt         # интерфейс (bcrypt/argon2 реализация)
-      TokenIssuer.kt            # интерфейс (JWT)
-      Clock.kt                  # обычно в foundation/time
-    service/
-      AuthService.kt
-  data/
-    db/
-      AuthTables.kt             # otp_codes, refresh_sessions (users table обычно в users/me модуле)
-    repo/
-      AuthRepository.kt
-      ExposedAuthRepository.kt
-  module/
-    AuthModule.kt               # создаёт AuthService и регистрирует `AuthRoutes` (функция `authModule`)
+server/rent-control-server/modules/auth/
+  src/main/kotlin/org/igorv8836/rentcontrol/server/modules/auth/
+    api/dto/...
+    domain/...
+    data/repo/...
+    module/AuthModule.kt        # содержит функцию `fun Route.authModule(...)`
 ```
 
 Что важно для `auth`:
-- OTP sender — порт (`domain/port/OtpSender.kt`), а mock реализация лежит в `integrations/email/MockOtpSender.kt`.
+- OTP sender — порт (`domain/port/OtpSender.kt`), а mock реализация лежит в `integrations/otp/MockOtpSender.kt`.
 - refresh‑токен хранится на клиенте и проксируется через BDUI-server, поэтому `/auth/refresh` остаётся обычным HTTP эндпоинтом API service.
 
 ---

@@ -31,4 +31,4 @@ cd "${repo_root}"
   :libraries:bdui-backend:runtime:check
 
 # Example for UI/device tests (uncomment when emulator available):
- ./gradlew :libraries:bdui:demo:connectedAndroidTest
+# ./gradlew :libraries:bdui:demo:connectedAndroidTest

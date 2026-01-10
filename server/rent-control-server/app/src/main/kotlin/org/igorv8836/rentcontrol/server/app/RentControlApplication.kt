@@ -22,6 +22,9 @@ import org.igorv8836.rentcontrol.server.modules.auth.domain.service.TokenService
 import org.igorv8836.rentcontrol.server.modules.auth.module.authModule
 import org.igorv8836.rentcontrol.server.modules.me.domain.service.MeService
 import org.igorv8836.rentcontrol.server.modules.me.module.meModule
+import org.igorv8836.rentcontrol.server.modules.objects.data.repo.ExposedObjectsRepository
+import org.igorv8836.rentcontrol.server.modules.objects.domain.service.ObjectsService
+import org.igorv8836.rentcontrol.server.modules.objects.module.objectsModule
 import org.igorv8836.rentcontrol.server.modules.users.data.repo.ExposedUsersRepository
 
 fun main(args: Array<String>) = EngineMain.main(args)
@@ -40,6 +43,7 @@ fun Application.module() {
     val usersRepository = ExposedUsersRepository(database)
     val sessionsRepository = ExposedAuthSessionRepository(database)
     val otpRepository = ExposedOtpRepository(database)
+    val objectsRepository = ExposedObjectsRepository(database)
 
     val passwordHasher = PasswordHasher()
     val tokenService = TokenService()
@@ -57,6 +61,11 @@ fun Application.module() {
     val meService = MeService(
         usersRepository = usersRepository,
         sessionsRepository = sessionsRepository,
+    )
+
+    val objectsService = ObjectsService(
+        objectsRepository = objectsRepository,
+        usersRepository = usersRepository,
     )
 
     install(BearerAuth) {
@@ -86,6 +95,7 @@ fun Application.module() {
         route("/api/v1") {
             authModule(authService)
             meModule(meService)
+            objectsModule(objectsService)
         }
     }
 }

@@ -17,6 +17,7 @@ dependencies {
     implementation(project(":server:rent-control-server:integrations"))
     implementation(project(":server:rent-control-server:modules:auth"))
     implementation(project(":server:rent-control-server:modules:me"))
+    implementation(project(":server:rent-control-server:modules:objects"))
     implementation(project(":server:rent-control-server:modules:users"))
 
     implementation(libs.logback)

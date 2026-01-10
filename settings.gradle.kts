@@ -42,6 +42,7 @@ include(
     ":server:rent-control-server:integrations",
     ":server:rent-control-server:modules:auth",
     ":server:rent-control-server:modules:me",
+    ":server:rent-control-server:modules:objects",
     ":server:rent-control-server:modules:users",
     ":shared",
     ":libraries:bdui",
