@@ -10,6 +10,7 @@
 ## Building and Testing
 - After the changes always run tests via scripts/run-all-tests.sh
 
-## Rules
+## Main rules
 - The file sizes should not be huge, divide into different files if possible.
 - Add tests whenever possible if you add new functionality.
+- Always write the commit name in English at the end of the final changes.

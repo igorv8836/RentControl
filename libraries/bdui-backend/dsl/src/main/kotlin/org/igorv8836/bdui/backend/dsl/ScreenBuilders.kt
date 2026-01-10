@@ -16,7 +16,7 @@ import org.igorv8836.bdui.contract.ScreenLifecycle
 import org.igorv8836.bdui.contract.ScreenSettings
 import org.igorv8836.bdui.contract.Section
 import org.igorv8836.bdui.contract.SectionScroll
-import org.igorv8836.bdui.contract.SectionSticky
+import org.igorv8836.bdui.contract.Sticky
 import org.igorv8836.bdui.contract.Theme
 import org.igorv8836.bdui.contract.Trigger
 import org.igorv8836.bdui.contract.UiEvent
@@ -67,7 +67,7 @@ class ScreenBuilder(
 
     fun section(
         key: SectionKey,
-        sticky: SectionSticky = SectionSticky.None,
+        sticky: Sticky? = null,
         scroll: SectionScroll = SectionScroll(),
         visibleIf: org.igorv8836.bdui.contract.Condition? = null,
         renderer: SectionRenderer,
@@ -186,7 +186,7 @@ class ScreenDraftBuilder(
 
     fun section(
         key: SectionKey,
-        sticky: SectionSticky = SectionSticky.None,
+        sticky: Sticky? = null,
         scroll: SectionScroll = SectionScroll(),
         visibleIf: org.igorv8836.bdui.contract.Condition? = null,
     ) {

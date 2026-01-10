@@ -4,7 +4,7 @@ import org.igorv8836.bdui.contract.ComponentNode
 import org.igorv8836.bdui.contract.Condition
 import org.igorv8836.bdui.contract.Section
 import org.igorv8836.bdui.contract.SectionScroll
-import org.igorv8836.bdui.contract.SectionSticky
+import org.igorv8836.bdui.contract.Sticky
 import org.igorv8836.bdui.backend.mapper.SectionBlueprint
 import org.igorv8836.bdui.backend.mapper.SectionKey
 
@@ -13,7 +13,7 @@ class SectionsBuilder {
 
     fun section(
         key: SectionKey,
-        sticky: SectionSticky = SectionSticky.None,
+        sticky: Sticky? = null,
         scroll: SectionScroll = SectionScroll(),
         visibleIf: Condition? = null,
         renderer: SectionRenderer,
@@ -30,7 +30,7 @@ class SectionsBuilder {
 
     fun section(
         key: SectionKey,
-        sticky: SectionSticky = SectionSticky.None,
+        sticky: Sticky? = null,
         scroll: SectionScroll = SectionScroll(),
         visibleIf: Condition? = null,
         content: ComponentNode,
@@ -49,7 +49,7 @@ class SectionsBuilder {
 
 fun section(
     key: SectionKey,
-    sticky: SectionSticky = SectionSticky.None,
+    sticky: Sticky? = null,
     scroll: SectionScroll = SectionScroll(),
     visibleIf: Condition? = null,
     content: ComponentNode,
@@ -63,7 +63,7 @@ fun section(
 
 data class SectionDraft(
     val id: String,
-    val sticky: SectionSticky,
+    val sticky: Sticky?,
     val scroll: SectionScroll,
     val visibleIf: Condition?,
     val renderer: SectionRenderer,
@@ -75,7 +75,7 @@ class SectionsDraftBuilder {
 
     fun section(
         key: SectionKey,
-        sticky: SectionSticky = SectionSticky.None,
+        sticky: Sticky? = null,
         scroll: SectionScroll = SectionScroll(),
         visibleIf: Condition? = null,
     ) {

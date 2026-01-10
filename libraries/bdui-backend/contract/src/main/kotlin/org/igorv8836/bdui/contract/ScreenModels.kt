@@ -80,7 +80,7 @@ data class ExecutionContext(
 data class Section(
     val id: String,
     val content: ComponentNode,
-    val sticky: SectionSticky = SectionSticky.None,
+    val sticky: Sticky? = null,
     val scroll: SectionScroll = SectionScroll(),
     val visibleIf: Condition? = null,
 )
@@ -94,8 +94,25 @@ data class SectionScroll(
     val contentPadding: Float? = null,
 )
 
-enum class SectionSticky {
-    None, Top, Bottom
+data class Sticky(
+    val edge: StickyEdge,
+    val mode: StickyMode = StickyMode.Always,
+) {
+    companion object {
+        fun top(mode: StickyMode = StickyMode.Always): Sticky = Sticky(edge = StickyEdge.Top, mode = mode)
+
+        fun bottom(mode: StickyMode = StickyMode.Always): Sticky = Sticky(edge = StickyEdge.Bottom, mode = mode)
+    }
+}
+
+enum class StickyEdge {
+    Top,
+    Bottom,
+}
+
+enum class StickyMode {
+    Always,
+    OnScrollTowardsEdge,
 }
 
 enum class ScrollOrientation {

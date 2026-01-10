@@ -8,8 +8,8 @@ import org.igorv8836.bdui.contract.ExecutionContext as UiExecutionContext
 import org.igorv8836.bdui.contract.ScreenLifecycle
 import org.igorv8836.bdui.contract.ScreenSettings
 import org.igorv8836.bdui.contract.SectionScroll
-import org.igorv8836.bdui.contract.SectionSticky
 import org.igorv8836.bdui.contract.Scaffold
+import org.igorv8836.bdui.contract.Sticky
 import org.igorv8836.bdui.contract.Theme
 import org.igorv8836.bdui.contract.Trigger
 import org.igorv8836.bdui.contract.Action
@@ -35,7 +35,7 @@ fun sectionKey(id: String): SectionKey = object : SectionKey {
  */
 data class SectionBlueprint(
     val key: SectionKey,
-    val sticky: SectionSticky = SectionSticky.None,
+    val sticky: Sticky? = null,
     val scroll: SectionScroll = SectionScroll(),
     val visibleIf: Condition? = null,
 ) {

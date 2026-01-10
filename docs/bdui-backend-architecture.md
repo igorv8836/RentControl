@@ -56,7 +56,7 @@ Router -> Engine.render(params: Parameters) -> ScreenBuilder -> (parallel) Secti
 - `interface ScreenBuilder<P : Parameters>` { fun build(params: P): ScreenDraft }
 - `data class ScreenDraft(val sections: List<SectionDraft>, val scaffold: ScaffoldDraft?, val settings: ScreenSettings, val actions: List<Action>, val triggers: List<Trigger>)`
 - `interface Draft` — маркер.
-  - `data class SectionDraft(val key: SectionKey, val sticky: SectionSticky, val scroll: SectionScroll, val visibleIf: Condition?) : Draft`
+  - `data class SectionDraft(val key: SectionKey, val sticky: Sticky?, val scroll: SectionScroll, val visibleIf: Condition?) : Draft`
   - `data class ScaffoldDraft(val key: SectionKey, val visibleIf: Condition?) : Draft` (scaffold обрабатывается так же как секция, но отдаёт scaffold parts)
 - `interface SectionKey { val id: String }` — объект для идентификации секции/scaffold.
 

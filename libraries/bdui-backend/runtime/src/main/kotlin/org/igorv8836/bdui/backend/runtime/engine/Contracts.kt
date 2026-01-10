@@ -4,7 +4,7 @@ import org.igorv8836.bdui.contract.Action
 import org.igorv8836.bdui.contract.Condition
 import org.igorv8836.bdui.contract.ScreenSettings
 import org.igorv8836.bdui.contract.SectionScroll
-import org.igorv8836.bdui.contract.SectionSticky
+import org.igorv8836.bdui.contract.Sticky
 import org.igorv8836.bdui.contract.Trigger
 
 /**
@@ -19,7 +19,7 @@ interface Draft
 
 data class SectionDraft(
     val key: SectionKey,
-    val sticky: SectionSticky = SectionSticky.None,
+    val sticky: Sticky? = null,
     val scroll: SectionScroll = SectionScroll(),
     val visibleIf: Condition? = null,
 ) : Draft
