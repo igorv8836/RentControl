@@ -46,6 +46,19 @@ class ContainerScope(
         ).also { children += it }
     }
 
+    fun stack(
+        id: String,
+        backgroundColor: Color? = null,
+        visibleIf: Condition? = null,
+        block: ContainerScope.() -> Unit = {},
+    ): Container = container(
+        id = id,
+        direction = ContainerDirection.Overlay,
+        backgroundColor = backgroundColor,
+        visibleIf = visibleIf,
+        block = block,
+    )
+
     fun text(
         id: String,
         text: String,
@@ -272,3 +285,18 @@ fun container(
         children = scope.children.toList(),
     )
 }
+
+fun stack(
+    id: String,
+    backgroundColor: Color? = null,
+    visibleIf: Condition? = null,
+    ctx: RenderContext = RenderContext(),
+    block: ContainerScope.() -> Unit = {},
+): Container = container(
+    id = id,
+    direction = ContainerDirection.Overlay,
+    backgroundColor = backgroundColor,
+    visibleIf = visibleIf,
+    ctx = ctx,
+    block = block,
+)
