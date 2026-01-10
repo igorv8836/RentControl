@@ -16,6 +16,8 @@ import org.igorv8836.rentcontrol.server.modules.auth.domain.service.AuthService
 import org.igorv8836.rentcontrol.server.modules.auth.domain.service.PasswordHasher
 import org.igorv8836.rentcontrol.server.modules.auth.domain.service.TokenService
 import org.igorv8836.rentcontrol.server.modules.users.domain.model.User
+import org.igorv8836.rentcontrol.server.modules.users.domain.port.UsersListQuery
+import org.igorv8836.rentcontrol.server.modules.users.domain.port.UsersPage
 import org.igorv8836.rentcontrol.server.modules.users.domain.port.UsersRepository
 import java.time.Instant
 import kotlin.test.Test
@@ -107,6 +109,23 @@ class AuthServiceTest {
             usersById.values.firstOrNull { it.email == email.lowercase() }
 
         override suspend fun getById(userId: Long): User? = usersById[userId]
+
+        override suspend fun listUsers(query: UsersListQuery): UsersPage {
+            val search = query.search
+            val filtered = usersById.values
+                .asSequence()
+                .filter { query.role == null || it.role == query.role }
+                .filter { query.status == null || it.status == query.status }
+                .filter { search == null || it.email.contains(search, ignoreCase = true) || it.fullName.contains(search, ignoreCase = true) }
+                .toList()
+
+            return UsersPage(
+                page = query.page,
+                pageSize = query.pageSize,
+                total = filtered.size.toLong(),
+                items = filtered,
+            )
+        }
 
         override suspend fun createUser(
             email: String,
@@ -228,4 +247,3 @@ class AuthServiceTest {
         kotlinx.coroutines.runBlocking { block() }
     }
 }
-

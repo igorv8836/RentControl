@@ -125,16 +125,16 @@
 - [x] `PATCH /objects/{objectId}` — редактирование.
 - [x] `POST /objects/{objectId}/archive`
 - [x] `POST /objects/{objectId}/unarchive`
-- [ ] `GET /objects/{objectId}/activity` — журнал активности/событий по объекту.
+- [x] `GET /objects/{objectId}/activity` — журнал активности/событий по объекту.
 
 ### Арендаторы (`/tenants/*` + link/unlink)
 
-- [ ] `GET /tenants` — список для выбора/привязки.
-- [ ] `POST /tenants` — создание.
-- [ ] `GET /tenants/{tenantId}` — карточка.
-- [ ] `PATCH /tenants/{tenantId}` — редактирование.
-- [ ] `POST /objects/{objectId}/tenant/link` — привязка.
-- [ ] `POST /objects/{objectId}/tenant/unlink` — отвязка.
+- [x] `GET /tenants` — список для выбора/привязки.
+- [x] `POST /tenants` — создание.
+- [x] `GET /tenants/{tenantId}` — карточка.
+- [x] `PATCH /tenants/{tenantId}` — редактирование.
+- [x] `POST /objects/{objectId}/tenant/link` — привязка.
+- [x] `POST /objects/{objectId}/tenant/unlink` — отвязка.
 
 ---
 

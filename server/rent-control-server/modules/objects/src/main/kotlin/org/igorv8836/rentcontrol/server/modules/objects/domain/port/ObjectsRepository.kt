@@ -1,6 +1,7 @@
 package org.igorv8836.rentcontrol.server.modules.objects.domain.port
 
 import org.igorv8836.rentcontrol.server.foundation.security.UserContext
+import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectActivityEvent
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectOccupancyStatus
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectAggregates
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.RentObject
@@ -29,6 +30,7 @@ data class CreateObjectData(
     val status: ObjectOccupancyStatus,
     val ownerId: Long,
     val tenantId: Long?,
+    val createdByUserId: Long,
 )
 
 data class UpdateObjectPatch(
@@ -44,7 +46,10 @@ interface ObjectsRepository {
     suspend fun listForUser(user: UserContext, query: ObjectsListQuery): ObjectsPage
     suspend fun getForUser(user: UserContext, objectId: Long): RentObject?
     suspend fun getAggregates(objectId: Long, now: Instant): ObjectAggregates
+    suspend fun listActivity(objectId: Long, limit: Int): List<ObjectActivityEvent>
     suspend fun create(data: CreateObjectData): RentObject
     suspend fun updateForUser(user: UserContext, objectId: Long, patch: UpdateObjectPatch): RentObject?
+    suspend fun linkTenantForUser(user: UserContext, objectId: Long, tenantId: Long): RentObject?
+    suspend fun unlinkTenantForUser(user: UserContext, objectId: Long): RentObject?
     suspend fun setArchivedForUser(user: UserContext, objectId: Long, archived: Boolean): RentObject?
 }

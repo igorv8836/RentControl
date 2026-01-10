@@ -5,6 +5,7 @@ import org.igorv8836.rentcontrol.server.foundation.errors.ApiException
 import org.igorv8836.rentcontrol.server.foundation.security.UserContext
 import org.igorv8836.rentcontrol.server.foundation.security.UserRole
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectOccupancyStatus
+import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectActivityEvent
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectAggregates
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.RentObject
 import org.igorv8836.rentcontrol.server.modules.objects.domain.port.CreateObjectData
@@ -107,6 +108,7 @@ class ObjectsService(
                 status = status,
                 ownerId = resolvedOwnerId,
                 tenantId = tenantId,
+                createdByUserId = user.userId,
             ),
         )
 
@@ -180,6 +182,53 @@ class ObjectsService(
                 code = "not_found",
                 message = "Object not found",
             )
+    }
+
+    suspend fun linkTenant(
+        user: UserContext,
+        objectId: Long,
+        tenantId: Long,
+    ): Pair<RentObject, User> {
+        requireWriteRole(user)
+
+        val tenant = validateTenant(tenantId)
+        val updated = objectsRepository.linkTenantForUser(user, objectId, tenantId)
+            ?: throw ApiException(
+                status = HttpStatusCode.NotFound,
+                code = "not_found",
+                message = "Object not found",
+            )
+
+        return updated to tenant
+    }
+
+    suspend fun unlinkTenant(
+        user: UserContext,
+        objectId: Long,
+    ): RentObject {
+        requireWriteRole(user)
+
+        return objectsRepository.unlinkTenantForUser(user, objectId)
+            ?: throw ApiException(
+                status = HttpStatusCode.NotFound,
+                code = "not_found",
+                message = "Object not found",
+            )
+    }
+
+    suspend fun getObjectActivity(
+        user: UserContext,
+        objectId: Long,
+        limit: Int = 50,
+    ): List<ObjectActivityEvent> {
+        val obj = objectsRepository.getForUser(user, objectId)
+            ?: throw ApiException(
+                status = HttpStatusCode.NotFound,
+                code = "not_found",
+                message = "Object not found",
+            )
+
+        return objectsRepository.listActivity(obj.id, limit)
     }
 
     private suspend fun validateTenant(tenantId: Long): User {

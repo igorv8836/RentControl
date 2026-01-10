@@ -12,7 +12,9 @@ import io.ktor.server.routing.route
 import org.igorv8836.rentcontrol.server.foundation.errors.ApiException
 import org.igorv8836.rentcontrol.server.foundation.security.userContext
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.CreateObjectRequest
+import org.igorv8836.rentcontrol.server.modules.objects.api.dto.LinkTenantRequest
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectActivityResponse
+import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectActivityItem
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectDefectsOverviewResponse
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectDetailsResponse
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectInspectionsOverviewResponse
@@ -22,6 +24,8 @@ import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectOverviewRe
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectUserSummary
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectsListResponse
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.UpdateObjectRequest
+import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectActivityActor
+import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectActivityEvent
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectAggregates
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectOccupancyStatus
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.RentObject
@@ -117,9 +121,33 @@ fun Route.objectsModule(objectsService: ObjectsService) {
                 call.respond(obj.toDetailsResponse(tenant = null))
             }
 
+            post("/tenant/link") {
+                val objectId = call.objectIdOrThrow()
+                val request = call.receive<LinkTenantRequest>()
+                val (obj, tenant) = objectsService.linkTenant(
+                    user = call.userContext,
+                    objectId = objectId,
+                    tenantId = request.tenantId,
+                )
+                call.respond(obj.toDetailsResponse(tenant))
+            }
+
+            post("/tenant/unlink") {
+                val objectId = call.objectIdOrThrow()
+                val obj = objectsService.unlinkTenant(
+                    user = call.userContext,
+                    objectId = objectId,
+                )
+                call.respond(obj.toDetailsResponse(tenant = null))
+            }
+
             get("/activity") {
-                call.objectIdOrThrow()
-                call.respond(ObjectActivityResponse(items = emptyList()))
+                val objectId = call.objectIdOrThrow()
+                val events = objectsService.getObjectActivity(
+                    user = call.userContext,
+                    objectId = objectId,
+                )
+                call.respond(ObjectActivityResponse(items = events.map { it.toActivityItem() }))
             }
         }
     }
@@ -214,3 +242,32 @@ private fun User.toUserSummary(): ObjectUserSummary =
         email = email,
         phone = phone,
     )
+
+private fun ObjectActivityActor.toUserSummary(): ObjectUserSummary =
+    ObjectUserSummary(
+        id = id,
+        fullName = fullName,
+        email = email,
+        phone = phone,
+    )
+
+private fun ObjectActivityEvent.toActivityItem(): ObjectActivityItem {
+    val (title, body) = when (action) {
+        "object_created" -> "Object created" to null
+        "object_updated" -> "Object updated" to null
+        "object_archived" -> "Object archived" to null
+        "object_unarchived" -> "Object unarchived" to null
+        "tenant_linked" -> "Tenant linked" to null
+        "tenant_unlinked" -> "Tenant unlinked" to null
+        else -> action to null
+    }
+
+    return ObjectActivityItem(
+        id = id,
+        createdAt = createdAt.toIsoString(),
+        actor = actor?.toUserSummary(),
+        type = action,
+        title = title,
+        body = body,
+    )
+}

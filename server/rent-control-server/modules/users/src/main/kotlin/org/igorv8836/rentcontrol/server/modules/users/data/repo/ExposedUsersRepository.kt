@@ -9,11 +9,19 @@ import org.igorv8836.rentcontrol.server.foundation.security.toDbValue
 import org.igorv8836.rentcontrol.server.foundation.security.userRoleFromDb
 import org.igorv8836.rentcontrol.server.foundation.security.userStatusFromDb
 import org.igorv8836.rentcontrol.server.modules.users.domain.model.User
+import org.igorv8836.rentcontrol.server.modules.users.domain.port.UsersListQuery
+import org.igorv8836.rentcontrol.server.modules.users.domain.port.UsersPage
 import org.igorv8836.rentcontrol.server.modules.users.domain.port.UsersRepository
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.count
 import org.jetbrains.exposed.sql.insertAndGetId
+import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -39,6 +47,32 @@ class ExposedUsersRepository(
             .limit(1)
             .singleOrNull()
             ?.toUser()
+    }
+
+    override suspend fun listUsers(query: UsersListQuery): UsersPage = newSuspendedTransaction(db = database) {
+        val whereClause = Op.build {
+            roleWhere(query.role) and statusWhere(query.status) and searchWhere(query.search)
+        }
+
+        val total = UsersTable
+            .selectAll()
+            .where { whereClause }
+            .count()
+
+        val offset = ((query.page - 1).toLong() * query.pageSize).coerceAtLeast(0)
+        val items = UsersTable
+            .selectAll()
+            .where { whereClause }
+            .orderBy(UsersTable.id, SortOrder.DESC)
+            .limit(query.pageSize, offset)
+            .map { it.toUser() }
+
+        UsersPage(
+            page = query.page,
+            pageSize = query.pageSize,
+            total = total,
+            items = items,
+        )
     }
 
     override suspend fun createUser(
@@ -116,5 +150,16 @@ class ExposedUsersRepository(
         createdAt = this[UsersTable.createdAt].toInstant(),
         updatedAt = this[UsersTable.updatedAt].toInstant(),
     )
-}
 
+    private fun roleWhere(role: UserRole?): Op<Boolean> =
+        role?.let { UsersTable.role eq it.toDbValue() } ?: Op.TRUE
+
+    private fun statusWhere(status: UserStatus?): Op<Boolean> =
+        status?.let { UsersTable.status eq it.toDbValue() } ?: Op.TRUE
+
+    private fun searchWhere(search: String?): Op<Boolean> =
+        search?.let {
+            val pattern = "%$it%"
+            (UsersTable.email like pattern) or (UsersTable.fullName like pattern)
+        } ?: Op.TRUE
+}

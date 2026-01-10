@@ -27,6 +27,8 @@ import org.igorv8836.rentcontrol.server.foundation.security.UserContext
 import org.igorv8836.rentcontrol.server.foundation.security.UserRole
 import org.igorv8836.rentcontrol.server.foundation.security.UserStatus
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectAggregates
+import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectActivityActor
+import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectActivityEvent
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectOccupancyStatus
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.RentObject
 import org.igorv8836.rentcontrol.server.modules.objects.domain.port.CreateObjectData
@@ -37,6 +39,8 @@ import org.igorv8836.rentcontrol.server.modules.objects.domain.port.UpdateObject
 import org.igorv8836.rentcontrol.server.modules.objects.domain.service.ObjectsService
 import org.igorv8836.rentcontrol.server.modules.objects.module.objectsModule
 import org.igorv8836.rentcontrol.server.modules.users.domain.model.User
+import org.igorv8836.rentcontrol.server.modules.users.domain.port.UsersListQuery
+import org.igorv8836.rentcontrol.server.modules.users.domain.port.UsersPage
 import org.igorv8836.rentcontrol.server.modules.users.domain.port.UsersRepository
 import java.time.Instant
 import kotlin.test.Test
@@ -191,6 +195,84 @@ class ObjectsModuleTest {
         )
     }
 
+    @Test
+    fun `landlord can link and unlink tenant and see activity`() = testApplication {
+        val usersRepo = FakeUsersRepository().apply {
+            seed(
+                User(
+                    id = 10,
+                    email = "tenant@example.com",
+                    fullName = "Tenant",
+                    phone = null,
+                    role = UserRole.TENANT,
+                    status = UserStatus.ACTIVE,
+                    passwordHash = "hash",
+                    preferences = Json.parseToJsonElement("{}").jsonObject,
+                    createdAt = Instant.now(),
+                    updatedAt = Instant.now(),
+                ),
+            )
+        }
+        val objectsRepo = FakeObjectsRepository()
+        val sessionsRepo = FakeSessionsRepository(
+            tokenToUser = mapOf(
+                "landlordToken" to UserContext(1, "landlord@example.com", UserRole.LANDLORD, UserStatus.ACTIVE),
+            ),
+        )
+
+        application {
+            installHttpBasics()
+            installErrorHandling()
+            install(BearerAuth) { sessionsRepository = sessionsRepo }
+            routing {
+                route("/api/v1") {
+                    objectsModule(ObjectsService(objectsRepo, usersRepo))
+                }
+            }
+        }
+
+        val created = client.post("/api/v1/objects") {
+            header(HttpHeaders.Authorization, "Bearer landlordToken")
+            contentType(ContentType.Application.Json)
+            setBody("""{"address":"Main street 2","type":"flat"}""")
+        }
+        assertEquals(HttpStatusCode.Created, created.status)
+
+        val createdJson = Json.parseToJsonElement(created.bodyAsText()).jsonObject
+        val objectId = createdJson["id"]?.jsonPrimitive?.long ?: error("Missing id")
+        assertEquals("available", createdJson["status"]?.jsonPrimitive?.content)
+
+        val linked = client.post("/api/v1/objects/$objectId/tenant/link") {
+            header(HttpHeaders.Authorization, "Bearer landlordToken")
+            contentType(ContentType.Application.Json)
+            setBody("""{"tenantId":10}""")
+        }
+        assertEquals(HttpStatusCode.OK, linked.status)
+
+        val linkedJson = Json.parseToJsonElement(linked.bodyAsText()).jsonObject
+        assertEquals("leased", linkedJson["status"]?.jsonPrimitive?.content)
+        assertEquals(10, linkedJson["tenant"]?.jsonObject?.get("id")?.jsonPrimitive?.long)
+
+        val unlinked = client.post("/api/v1/objects/$objectId/tenant/unlink") {
+            header(HttpHeaders.Authorization, "Bearer landlordToken")
+        }
+        assertEquals(HttpStatusCode.OK, unlinked.status)
+
+        val unlinkedJson = Json.parseToJsonElement(unlinked.bodyAsText()).jsonObject
+        assertEquals("available", unlinkedJson["status"]?.jsonPrimitive?.content)
+        assertTrue(unlinkedJson["tenant"] == null)
+
+        val activity = client.get("/api/v1/objects/$objectId/activity") {
+            header(HttpHeaders.Authorization, "Bearer landlordToken")
+        }
+        assertEquals(HttpStatusCode.OK, activity.status)
+
+        val activityJson = Json.parseToJsonElement(activity.bodyAsText()).jsonObject
+        val items = activityJson["items"]?.jsonArray ?: error("Missing items")
+        assertTrue(items.size >= 3)
+        assertEquals("tenant_unlinked", items[0].jsonObject["type"]?.jsonPrimitive?.content)
+    }
+
     private class FakeSessionsRepository(
         private val tokenToUser: Map<String, UserContext>,
     ) : AccessTokenAuthenticator {
@@ -208,6 +290,9 @@ class ObjectsModuleTest {
             usersById.values.firstOrNull { it.email == email.lowercase() }
 
         override suspend fun getById(userId: Long): User? = usersById[userId]
+
+        override suspend fun listUsers(query: UsersListQuery): UsersPage =
+            UsersPage(page = query.page, pageSize = query.pageSize, total = 0, items = emptyList())
 
         override suspend fun createUser(email: String, passwordHash: String, role: UserRole, status: UserStatus): User {
             error("Not needed in test")
@@ -229,7 +314,9 @@ class ObjectsModuleTest {
 
     private class FakeObjectsRepository : ObjectsRepository {
         private val objects = linkedMapOf<Long, RentObject>()
+        private val activities = linkedMapOf<Long, MutableList<ObjectActivityEvent>>()
         private var nextId: Long = 1
+        private var nextActivityId: Long = 1
 
         override suspend fun listForUser(user: UserContext, query: ObjectsListQuery): ObjectsPage {
             val filtered = objects.values
@@ -273,6 +360,9 @@ class ObjectsModuleTest {
                 lastMeterReadingAt = Instant.parse("2026-01-08T00:00:00Z"),
             )
 
+        override suspend fun listActivity(objectId: Long, limit: Int): List<ObjectActivityEvent> =
+            activities[objectId]?.take(limit) ?: emptyList()
+
         override suspend fun create(data: CreateObjectData): RentObject {
             val id = nextId++
             val now = Instant.now()
@@ -290,6 +380,13 @@ class ObjectsModuleTest {
                 updatedAt = now,
             )
             objects[id] = obj
+
+            record(
+                objectId = id,
+                actor = null,
+                action = "object_created",
+            )
+
             return obj
         }
 
@@ -305,6 +402,49 @@ class ObjectsModuleTest {
                 updatedAt = Instant.now(),
             )
             objects[objectId] = updated
+
+            record(
+                objectId = objectId,
+                actor = user.toActor(),
+                action = "object_updated",
+            )
+
+            return updated
+        }
+
+        override suspend fun linkTenantForUser(user: UserContext, objectId: Long, tenantId: Long): RentObject? {
+            val current = getForUser(user, objectId) ?: return null
+            val updated = current.copy(
+                tenantId = tenantId,
+                status = ObjectOccupancyStatus.LEASED,
+                updatedAt = Instant.now(),
+            )
+            objects[objectId] = updated
+
+            record(
+                objectId = objectId,
+                actor = user.toActor(),
+                action = "tenant_linked",
+            )
+
+            return updated
+        }
+
+        override suspend fun unlinkTenantForUser(user: UserContext, objectId: Long): RentObject? {
+            val current = getForUser(user, objectId) ?: return null
+            val updated = current.copy(
+                tenantId = null,
+                status = ObjectOccupancyStatus.AVAILABLE,
+                updatedAt = Instant.now(),
+            )
+            objects[objectId] = updated
+
+            record(
+                objectId = objectId,
+                actor = user.toActor(),
+                action = "tenant_unlinked",
+            )
+
             return updated
         }
 
@@ -315,7 +455,36 @@ class ObjectsModuleTest {
                 updatedAt = Instant.now(),
             )
             objects[objectId] = updated
+
+            record(
+                objectId = objectId,
+                actor = user.toActor(),
+                action = if (archived) "object_archived" else "object_unarchived",
+            )
+
             return updated
         }
+
+        private fun record(
+            objectId: Long,
+            actor: ObjectActivityActor?,
+            action: String,
+        ) {
+            val event = ObjectActivityEvent(
+                id = nextActivityId++,
+                createdAt = Instant.now(),
+                actor = actor,
+                action = action,
+            )
+            activities.getOrPut(objectId, ::mutableListOf).add(0, event)
+        }
+
+        private fun UserContext.toActor(): ObjectActivityActor =
+            ObjectActivityActor(
+                id = userId,
+                fullName = "",
+                email = email,
+                phone = null,
+            )
     }
 }

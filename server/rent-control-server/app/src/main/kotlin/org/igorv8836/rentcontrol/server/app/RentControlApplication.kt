@@ -25,6 +25,8 @@ import org.igorv8836.rentcontrol.server.modules.me.module.meModule
 import org.igorv8836.rentcontrol.server.modules.objects.data.repo.ExposedObjectsRepository
 import org.igorv8836.rentcontrol.server.modules.objects.domain.service.ObjectsService
 import org.igorv8836.rentcontrol.server.modules.objects.module.objectsModule
+import org.igorv8836.rentcontrol.server.modules.tenants.domain.service.TenantsService
+import org.igorv8836.rentcontrol.server.modules.tenants.module.tenantsModule
 import org.igorv8836.rentcontrol.server.modules.users.data.repo.ExposedUsersRepository
 
 fun main(args: Array<String>) = EngineMain.main(args)
@@ -68,6 +70,10 @@ fun Application.module() {
         usersRepository = usersRepository,
     )
 
+    val tenantsService = TenantsService(
+        usersRepository = usersRepository,
+    )
+
     install(BearerAuth) {
         this.sessionsRepository = sessionsRepository
     }
@@ -96,6 +102,7 @@ fun Application.module() {
             authModule(authService)
             meModule(meService)
             objectsModule(objectsService)
+            tenantsModule(tenantsService)
         }
     }
 }

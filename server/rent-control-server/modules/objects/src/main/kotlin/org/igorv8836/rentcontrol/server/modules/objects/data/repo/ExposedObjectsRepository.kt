@@ -1,5 +1,6 @@
 package org.igorv8836.rentcontrol.server.modules.objects.data.repo
 
+import org.igorv8836.rentcontrol.server.foundation.db.AuditLogTable
 import org.igorv8836.rentcontrol.server.foundation.db.DefectsTable
 import org.igorv8836.rentcontrol.server.foundation.db.InspectionsTable
 import org.igorv8836.rentcontrol.server.foundation.db.MeterReadingsTable
@@ -7,6 +8,8 @@ import org.igorv8836.rentcontrol.server.foundation.db.PropertiesTable
 import org.igorv8836.rentcontrol.server.foundation.db.UsersTable
 import org.igorv8836.rentcontrol.server.foundation.security.UserContext
 import org.igorv8836.rentcontrol.server.foundation.security.UserRole
+import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectActivityActor
+import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectActivityEvent
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectAggregates
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectOccupancyStatus
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.RentObject
@@ -27,8 +30,10 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNotNull
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.count
+import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -141,6 +146,50 @@ class ExposedObjectsRepository(
             )
         }
 
+    override suspend fun listActivity(objectId: Long, limit: Int): List<ObjectActivityEvent> =
+        newSuspendedTransaction(db = database) {
+            val rows = AuditLogTable
+                .selectAll()
+                .where { (AuditLogTable.entityType eq ENTITY_TYPE_OBJECT) and (AuditLogTable.entityId eq objectId) }
+                .orderBy(AuditLogTable.id, SortOrder.DESC)
+                .limit(limit)
+                .map { row ->
+                    AuditRow(
+                        id = row[AuditLogTable.id].value,
+                        createdAt = row[AuditLogTable.createdAt].toInstant(),
+                        userId = row[AuditLogTable.userId]?.value,
+                        action = row[AuditLogTable.action],
+                    )
+                }
+
+            val actorIds = rows.mapNotNull { it.userId }.distinct()
+            val actorsById: Map<Long, ObjectActivityActor> = if (actorIds.isEmpty()) {
+                emptyMap()
+            } else {
+                UsersTable
+                    .selectAll()
+                    .where { UsersTable.id inList actorIds }
+                    .associate { row ->
+                        val id = row[UsersTable.id].value
+                        id to ObjectActivityActor(
+                            id = id,
+                            fullName = row[UsersTable.fullName],
+                            email = row[UsersTable.email],
+                            phone = row[UsersTable.phone],
+                        )
+                    }
+            }
+
+            rows.map { row ->
+                ObjectActivityEvent(
+                    id = row.id,
+                    createdAt = row.createdAt,
+                    actor = row.userId?.let(actorsById::get),
+                    action = row.action,
+                )
+            }
+        }
+
     override suspend fun create(data: CreateObjectData): RentObject = newSuspendedTransaction(db = database) {
         val now = OffsetDateTime.now(ZoneOffset.UTC)
         val id = PropertiesTable.insertAndGetId {
@@ -155,6 +204,12 @@ class ExposedObjectsRepository(
             it[createdAt] = now
             it[updatedAt] = now
         }.value
+
+        insertAudit(
+            userId = data.createdByUserId,
+            objectId = id,
+            action = ACTION_OBJECT_CREATED,
+        )
 
         PropertiesTable
             .selectAll()
@@ -186,6 +241,60 @@ class ExposedObjectsRepository(
                 return@newSuspendedTransaction null
             }
 
+            insertAudit(
+                userId = user.userId,
+                objectId = objectId,
+                action = ACTION_OBJECT_UPDATED,
+            )
+
+            getForUser(user, objectId)
+        }
+
+    override suspend fun linkTenantForUser(user: UserContext, objectId: Long, tenantId: Long): RentObject? =
+        newSuspendedTransaction(db = database) {
+            val now = OffsetDateTime.now(ZoneOffset.UTC)
+            val updated = PropertiesTable.update(
+                where = { (PropertiesTable.id eq objectId) and accessibleWhere(user) },
+            ) { row ->
+                row[PropertiesTable.tenantId] = EntityID(tenantId, UsersTable)
+                row[PropertiesTable.status] = ObjectOccupancyStatus.LEASED.toDbValue()
+                row[PropertiesTable.updatedAt] = now
+            }
+
+            if (updated == 0) {
+                return@newSuspendedTransaction null
+            }
+
+            insertAudit(
+                userId = user.userId,
+                objectId = objectId,
+                action = ACTION_TENANT_LINKED,
+            )
+
+            getForUser(user, objectId)
+        }
+
+    override suspend fun unlinkTenantForUser(user: UserContext, objectId: Long): RentObject? =
+        newSuspendedTransaction(db = database) {
+            val now = OffsetDateTime.now(ZoneOffset.UTC)
+            val updated = PropertiesTable.update(
+                where = { (PropertiesTable.id eq objectId) and accessibleWhere(user) },
+            ) { row ->
+                row[PropertiesTable.tenantId] = null
+                row[PropertiesTable.status] = ObjectOccupancyStatus.AVAILABLE.toDbValue()
+                row[PropertiesTable.updatedAt] = now
+            }
+
+            if (updated == 0) {
+                return@newSuspendedTransaction null
+            }
+
+            insertAudit(
+                userId = user.userId,
+                objectId = objectId,
+                action = ACTION_TENANT_UNLINKED,
+            )
+
             getForUser(user, objectId)
         }
 
@@ -204,6 +313,12 @@ class ExposedObjectsRepository(
             if (updated == 0) {
                 return@newSuspendedTransaction null
             }
+
+            insertAudit(
+                userId = user.userId,
+                objectId = objectId,
+                action = if (archived) ACTION_OBJECT_ARCHIVED else ACTION_OBJECT_UNARCHIVED,
+            )
 
             getForUser(user, objectId)
         }
@@ -242,4 +357,34 @@ class ExposedObjectsRepository(
         search?.let { PropertiesTable.address like "%$it%" } ?: Op.TRUE
 
     private fun Instant.toOffsetDateTime(): OffsetDateTime = OffsetDateTime.ofInstant(this, ZoneOffset.UTC)
+
+    private fun insertAudit(
+        userId: Long,
+        objectId: Long,
+        action: String,
+    ) {
+        AuditLogTable.insert { row ->
+            row[AuditLogTable.userId] = EntityID(userId, UsersTable)
+            row[AuditLogTable.entityType] = ENTITY_TYPE_OBJECT
+            row[AuditLogTable.entityId] = objectId
+            row[AuditLogTable.action] = action
+        }
+    }
+
+    private data class AuditRow(
+        val id: Long,
+        val createdAt: Instant,
+        val userId: Long?,
+        val action: String,
+    )
+
+    private companion object {
+        private const val ENTITY_TYPE_OBJECT = "object"
+        private const val ACTION_OBJECT_CREATED = "object_created"
+        private const val ACTION_OBJECT_UPDATED = "object_updated"
+        private const val ACTION_OBJECT_ARCHIVED = "object_archived"
+        private const val ACTION_OBJECT_UNARCHIVED = "object_unarchived"
+        private const val ACTION_TENANT_LINKED = "tenant_linked"
+        private const val ACTION_TENANT_UNLINKED = "tenant_unlinked"
+    }
 }

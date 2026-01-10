@@ -57,6 +57,11 @@ data class UpdateObjectRequest(
 )
 
 @Serializable
+data class LinkTenantRequest(
+    val tenantId: Long,
+)
+
+@Serializable
 data class ObjectUserSummary(
     val id: Long,
     val fullName: String,
@@ -95,6 +100,9 @@ data class ObjectActivityResponse(
 
 @Serializable
 data class ObjectActivityItem(
+    val id: Long,
+    val createdAt: String,
+    val actor: ObjectUserSummary? = null,
     val type: String,
     val title: String,
     val body: String? = null,

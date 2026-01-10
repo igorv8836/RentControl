@@ -25,6 +25,8 @@ import org.igorv8836.rentcontrol.server.modules.auth.domain.port.SessionRecord
 import org.igorv8836.rentcontrol.server.modules.me.domain.service.MeService
 import org.igorv8836.rentcontrol.server.modules.me.module.meModule
 import org.igorv8836.rentcontrol.server.modules.users.domain.model.User
+import org.igorv8836.rentcontrol.server.modules.users.domain.port.UsersListQuery
+import org.igorv8836.rentcontrol.server.modules.users.domain.port.UsersPage
 import org.igorv8836.rentcontrol.server.modules.users.domain.port.UsersRepository
 import java.time.Instant
 import kotlin.test.Test
@@ -86,6 +88,9 @@ class MeModuleTest {
         override suspend fun findByEmail(email: String): User? = usersById.values.firstOrNull { it.email == email }
 
         override suspend fun getById(userId: Long): User? = usersById[userId]
+
+        override suspend fun listUsers(query: UsersListQuery): UsersPage =
+            UsersPage(page = query.page, pageSize = query.pageSize, total = 0, items = emptyList())
 
         override suspend fun createUser(email: String, passwordHash: String, role: UserRole, status: UserStatus): User {
             error("Not needed in test")
