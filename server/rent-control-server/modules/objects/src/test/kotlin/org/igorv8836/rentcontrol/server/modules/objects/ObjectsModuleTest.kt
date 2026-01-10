@@ -18,6 +18,7 @@ import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 import org.igorv8836.rentcontrol.server.foundation.errors.installErrorHandling
 import org.igorv8836.rentcontrol.server.foundation.http.installHttpBasics
 import org.igorv8836.rentcontrol.server.foundation.security.AccessTokenAuthenticator
@@ -25,6 +26,7 @@ import org.igorv8836.rentcontrol.server.foundation.security.BearerAuth
 import org.igorv8836.rentcontrol.server.foundation.security.UserContext
 import org.igorv8836.rentcontrol.server.foundation.security.UserRole
 import org.igorv8836.rentcontrol.server.foundation.security.UserStatus
+import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectAggregates
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectOccupancyStatus
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.RentObject
 import org.igorv8836.rentcontrol.server.modules.objects.domain.port.CreateObjectData
@@ -160,6 +162,7 @@ class ObjectsModuleTest {
         assertEquals(HttpStatusCode.Created, created.status)
 
         val createdJson = Json.parseToJsonElement(created.bodyAsText()).jsonObject
+        val objectId = createdJson["id"]?.jsonPrimitive?.long ?: error("Missing id")
         assertEquals("leased", createdJson["status"]?.jsonPrimitive?.content)
         assertTrue(createdJson["isArchived"]?.jsonPrimitive?.booleanOrNull == false)
 
@@ -172,6 +175,20 @@ class ObjectsModuleTest {
         val items = listJson["items"]?.jsonArray ?: error("Missing items")
         assertEquals(1, items.size)
         assertEquals("Main street 1", items[0].jsonObject["address"]?.jsonPrimitive?.content)
+
+        val details = client.get("/api/v1/objects/$objectId") {
+            header(HttpHeaders.Authorization, "Bearer landlordToken")
+        }
+        assertEquals(HttpStatusCode.OK, details.status)
+
+        val detailsJson = Json.parseToJsonElement(details.bodyAsText()).jsonObject
+        val overview = detailsJson["overview"]?.jsonObject ?: error("Missing overview")
+        assertEquals("2", overview["defects"]?.jsonObject?.get("openCount")?.jsonPrimitive?.content)
+        assertEquals("1", overview["defects"]?.jsonObject?.get("overdueCount")?.jsonPrimitive?.content)
+        assertEquals(
+            "2026-01-10T00:00:00Z",
+            overview["inspections"]?.jsonObject?.get("nextScheduledAt")?.jsonPrimitive?.content,
+        )
     }
 
     private class FakeSessionsRepository(
@@ -246,6 +263,15 @@ class ObjectsModuleTest {
             }
             return if (accessible) obj else null
         }
+
+        override suspend fun getAggregates(objectId: Long, now: Instant): ObjectAggregates =
+            ObjectAggregates(
+                defectsOpenCount = 2,
+                defectsOverdueCount = 1,
+                nextInspectionAt = Instant.parse("2026-01-10T00:00:00Z"),
+                lastInspectionAt = Instant.parse("2026-01-09T00:00:00Z"),
+                lastMeterReadingAt = Instant.parse("2026-01-08T00:00:00Z"),
+            )
 
         override suspend fun create(data: CreateObjectData): RentObject {
             val id = nextId++

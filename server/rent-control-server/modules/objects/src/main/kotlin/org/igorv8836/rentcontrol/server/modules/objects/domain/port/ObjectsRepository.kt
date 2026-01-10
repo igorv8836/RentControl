@@ -2,7 +2,9 @@ package org.igorv8836.rentcontrol.server.modules.objects.domain.port
 
 import org.igorv8836.rentcontrol.server.foundation.security.UserContext
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectOccupancyStatus
+import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectAggregates
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.RentObject
+import java.time.Instant
 
 data class ObjectsListQuery(
     val search: String? = null,
@@ -41,8 +43,8 @@ data class UpdateObjectPatch(
 interface ObjectsRepository {
     suspend fun listForUser(user: UserContext, query: ObjectsListQuery): ObjectsPage
     suspend fun getForUser(user: UserContext, objectId: Long): RentObject?
+    suspend fun getAggregates(objectId: Long, now: Instant): ObjectAggregates
     suspend fun create(data: CreateObjectData): RentObject
     suspend fun updateForUser(user: UserContext, objectId: Long, patch: UpdateObjectPatch): RentObject?
     suspend fun setArchivedForUser(user: UserContext, objectId: Long, archived: Boolean): RentObject?
 }
-

@@ -13,17 +13,24 @@ import org.igorv8836.rentcontrol.server.foundation.errors.ApiException
 import org.igorv8836.rentcontrol.server.foundation.security.userContext
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.CreateObjectRequest
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectActivityResponse
+import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectDefectsOverviewResponse
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectDetailsResponse
+import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectInspectionsOverviewResponse
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectListItem
+import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectMetersOverviewResponse
+import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectOverviewResponse
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectUserSummary
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectsListResponse
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.UpdateObjectRequest
+import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectAggregates
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectOccupancyStatus
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.RentObject
 import org.igorv8836.rentcontrol.server.modules.objects.domain.port.ObjectsListQuery
 import org.igorv8836.rentcontrol.server.modules.objects.domain.port.UpdateObjectPatch
+import org.igorv8836.rentcontrol.server.modules.objects.domain.service.ObjectDetails
 import org.igorv8836.rentcontrol.server.modules.objects.domain.service.ObjectsService
 import org.igorv8836.rentcontrol.server.modules.users.domain.model.User
+import java.time.Instant
 
 fun Route.objectsModule(objectsService: ObjectsService) {
     route("/objects") {
@@ -76,8 +83,8 @@ fun Route.objectsModule(objectsService: ObjectsService) {
         route("/{objectId}") {
             get {
                 val objectId = call.objectIdOrThrow()
-                val (obj, tenant) = objectsService.getObject(call.userContext, objectId)
-                call.respond(obj.toDetailsResponse(tenant))
+                val details = objectsService.getObjectDetails(call.userContext, objectId)
+                call.respond(details.toDetailsResponse())
             }
 
             patch {
@@ -160,6 +167,46 @@ private fun RentObject.toDetailsResponse(tenant: User?): ObjectDetailsResponse =
         isArchived = isArchived,
     )
 
+private fun ObjectDetails.toDetailsResponse(): ObjectDetailsResponse =
+    obj.toDetailsResponse(
+        tenant = tenant,
+        aggregates = aggregates,
+    )
+
+private fun RentObject.toDetailsResponse(
+    tenant: User?,
+    aggregates: ObjectAggregates?,
+): ObjectDetailsResponse =
+    ObjectDetailsResponse(
+        id = id,
+        address = address,
+        type = type,
+        area = area,
+        status = status,
+        notes = notes,
+        ownerId = ownerId,
+        tenant = tenant?.toUserSummary(),
+        isArchived = isArchived,
+        overview = aggregates?.toOverviewResponse(),
+    )
+
+private fun ObjectAggregates.toOverviewResponse(): ObjectOverviewResponse =
+    ObjectOverviewResponse(
+        defects = ObjectDefectsOverviewResponse(
+            openCount = defectsOpenCount,
+            overdueCount = defectsOverdueCount,
+        ),
+        inspections = ObjectInspectionsOverviewResponse(
+            nextScheduledAt = nextInspectionAt?.toIsoString(),
+            lastCompletedAt = lastInspectionAt?.toIsoString(),
+        ),
+        meters = ObjectMetersOverviewResponse(
+            lastReadingAt = lastMeterReadingAt?.toIsoString(),
+        ),
+    )
+
+private fun Instant.toIsoString(): String = toString()
+
 private fun User.toUserSummary(): ObjectUserSummary =
     ObjectUserSummary(
         id = id,
@@ -167,4 +214,3 @@ private fun User.toUserSummary(): ObjectUserSummary =
         email = email,
         phone = phone,
     )
-

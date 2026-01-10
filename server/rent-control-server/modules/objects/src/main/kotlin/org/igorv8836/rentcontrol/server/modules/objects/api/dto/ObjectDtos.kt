@@ -33,6 +33,7 @@ data class ObjectDetailsResponse(
     val ownerId: Long,
     val tenant: ObjectUserSummary? = null,
     val isArchived: Boolean,
+    val overview: ObjectOverviewResponse? = null,
 )
 
 @Serializable
@@ -64,6 +65,30 @@ data class ObjectUserSummary(
 )
 
 @Serializable
+data class ObjectOverviewResponse(
+    val defects: ObjectDefectsOverviewResponse,
+    val inspections: ObjectInspectionsOverviewResponse,
+    val meters: ObjectMetersOverviewResponse,
+)
+
+@Serializable
+data class ObjectDefectsOverviewResponse(
+    val openCount: Long,
+    val overdueCount: Long,
+)
+
+@Serializable
+data class ObjectInspectionsOverviewResponse(
+    val nextScheduledAt: String? = null,
+    val lastCompletedAt: String? = null,
+)
+
+@Serializable
+data class ObjectMetersOverviewResponse(
+    val lastReadingAt: String? = null,
+)
+
+@Serializable
 data class ObjectActivityResponse(
     val items: List<ObjectActivityItem>,
 )
@@ -74,4 +99,3 @@ data class ObjectActivityItem(
     val title: String,
     val body: String? = null,
 )
-

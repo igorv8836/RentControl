@@ -5,6 +5,7 @@ import org.igorv8836.rentcontrol.server.foundation.errors.ApiException
 import org.igorv8836.rentcontrol.server.foundation.security.UserContext
 import org.igorv8836.rentcontrol.server.foundation.security.UserRole
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectOccupancyStatus
+import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectAggregates
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.RentObject
 import org.igorv8836.rentcontrol.server.modules.objects.domain.port.CreateObjectData
 import org.igorv8836.rentcontrol.server.modules.objects.domain.port.ObjectsListQuery
@@ -13,6 +14,7 @@ import org.igorv8836.rentcontrol.server.modules.objects.domain.port.ObjectsRepos
 import org.igorv8836.rentcontrol.server.modules.objects.domain.port.UpdateObjectPatch
 import org.igorv8836.rentcontrol.server.modules.users.domain.model.User
 import org.igorv8836.rentcontrol.server.modules.users.domain.port.UsersRepository
+import java.time.Instant
 
 class ObjectsService(
     private val objectsRepository: ObjectsRepository,
@@ -23,7 +25,7 @@ class ObjectsService(
         return objectsRepository.listForUser(user, query)
     }
 
-    suspend fun getObject(user: UserContext, objectId: Long): Pair<RentObject, User?> {
+    suspend fun getObjectDetails(user: UserContext, objectId: Long, now: Instant = Instant.now()): ObjectDetails {
         val obj = objectsRepository.getForUser(user, objectId)
             ?: throw ApiException(
                 status = HttpStatusCode.NotFound,
@@ -32,7 +34,13 @@ class ObjectsService(
             )
 
         val tenant = obj.tenantId?.let { usersRepository.getById(it) }
-        return obj to tenant
+        val aggregates = objectsRepository.getAggregates(obj.id, now)
+
+        return ObjectDetails(
+            obj = obj,
+            tenant = tenant,
+            aggregates = aggregates,
+        )
     }
 
     suspend fun createObject(
@@ -218,3 +226,9 @@ class ObjectsService(
         }
     }
 }
+
+data class ObjectDetails(
+    val obj: RentObject,
+    val tenant: User?,
+    val aggregates: ObjectAggregates,
+)

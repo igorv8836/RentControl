@@ -1,9 +1,13 @@
 package org.igorv8836.rentcontrol.server.modules.objects.data.repo
 
+import org.igorv8836.rentcontrol.server.foundation.db.DefectsTable
+import org.igorv8836.rentcontrol.server.foundation.db.InspectionsTable
+import org.igorv8836.rentcontrol.server.foundation.db.MeterReadingsTable
 import org.igorv8836.rentcontrol.server.foundation.db.PropertiesTable
 import org.igorv8836.rentcontrol.server.foundation.db.UsersTable
 import org.igorv8836.rentcontrol.server.foundation.security.UserContext
 import org.igorv8836.rentcontrol.server.foundation.security.UserRole
+import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectAggregates
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.ObjectOccupancyStatus
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.RentObject
 import org.igorv8836.rentcontrol.server.modules.objects.domain.model.objectOccupancyStatusFromDb
@@ -18,7 +22,10 @@ import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNotNull
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.count
@@ -28,6 +35,7 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 import org.jetbrains.exposed.sql.update
 import org.jetbrains.exposed.dao.id.EntityID
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -72,6 +80,65 @@ class ExposedObjectsRepository(
                 .limit(1)
                 .singleOrNull()
                 ?.toObject()
+        }
+
+    override suspend fun getAggregates(objectId: Long, now: Instant): ObjectAggregates =
+        newSuspendedTransaction(db = database) {
+            val propertyId = EntityID(objectId, PropertiesTable)
+            val nowOffset = now.toOffsetDateTime()
+
+            val defectsOpenCount = DefectsTable
+                .selectAll()
+                .where { (DefectsTable.propertyId eq propertyId) and DefectsTable.resolvedAt.isNull() }
+                .count()
+
+            val defectsOverdueCount = DefectsTable
+                .selectAll()
+                .where {
+                    (DefectsTable.propertyId eq propertyId) and
+                        DefectsTable.resolvedAt.isNull() and
+                        (DefectsTable.deadline less nowOffset)
+                }
+                .count()
+
+            val nextInspectionAt = InspectionsTable
+                .selectAll()
+                .where {
+                    (InspectionsTable.propertyId eq propertyId) and
+                        (InspectionsTable.status eq "scheduled") and
+                        (InspectionsTable.scheduledDate greaterEq nowOffset)
+                }
+                .orderBy(InspectionsTable.scheduledDate, SortOrder.ASC)
+                .limit(1)
+                .singleOrNull()
+                ?.let { row -> row[InspectionsTable.scheduledDate]?.toInstant() }
+
+            val lastInspectionAt = InspectionsTable
+                .selectAll()
+                .where {
+                    (InspectionsTable.propertyId eq propertyId) and
+                        InspectionsTable.completedDate.isNotNull()
+                }
+                .orderBy(InspectionsTable.completedDate, SortOrder.DESC)
+                .limit(1)
+                .singleOrNull()
+                ?.let { row -> row[InspectionsTable.completedDate]?.toInstant() }
+
+            val lastMeterReadingAt = MeterReadingsTable
+                .selectAll()
+                .where { MeterReadingsTable.propertyId eq propertyId }
+                .orderBy(MeterReadingsTable.recordedAt, SortOrder.DESC)
+                .limit(1)
+                .singleOrNull()
+                ?.let { row -> row[MeterReadingsTable.recordedAt].toInstant() }
+
+            ObjectAggregates(
+                defectsOpenCount = defectsOpenCount,
+                defectsOverdueCount = defectsOverdueCount,
+                nextInspectionAt = nextInspectionAt,
+                lastInspectionAt = lastInspectionAt,
+                lastMeterReadingAt = lastMeterReadingAt,
+            )
         }
 
     override suspend fun create(data: CreateObjectData): RentObject = newSuspendedTransaction(db = database) {
@@ -173,4 +240,6 @@ class ExposedObjectsRepository(
 
     private fun searchWhere(search: String?): Op<Boolean> =
         search?.let { PropertiesTable.address like "%$it%" } ?: Op.TRUE
+
+    private fun Instant.toOffsetDateTime(): OffsetDateTime = OffsetDateTime.ofInstant(this, ZoneOffset.UTC)
 }

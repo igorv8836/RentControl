@@ -120,7 +120,8 @@
 - [x] `GET /objects` — поиск/фильтры/сортировка, пагинация.
 - [x] `POST /objects` — создание объекта.
 - [x] `GET /objects/{objectId}` — карточка объекта (основные поля + арендатор).
-- [ ] `GET /objects/{objectId}` — агрегаты (дефекты/осмотры/расходы/показания) в ответе.
+- [x] `GET /objects/{objectId}` — агрегаты (дефекты/осмотры/показания) в ответе.
+- [ ] `GET /objects/{objectId}` — агрегаты (расходы) в ответе.
 - [x] `PATCH /objects/{objectId}` — редактирование.
 - [x] `POST /objects/{objectId}/archive`
 - [x] `POST /objects/{objectId}/unarchive`
