@@ -25,6 +25,9 @@ import org.igorv8836.rentcontrol.server.modules.me.module.meModule
 import org.igorv8836.rentcontrol.server.modules.objects.data.repo.ExposedObjectsRepository
 import org.igorv8836.rentcontrol.server.modules.objects.domain.service.ObjectsService
 import org.igorv8836.rentcontrol.server.modules.objects.module.objectsModule
+import org.igorv8836.rentcontrol.server.modules.expenses.data.repo.ExposedExpensesRepository
+import org.igorv8836.rentcontrol.server.modules.expenses.domain.service.ExpensesService
+import org.igorv8836.rentcontrol.server.modules.expenses.module.expensesModule
 import org.igorv8836.rentcontrol.server.modules.tenants.domain.service.TenantsService
 import org.igorv8836.rentcontrol.server.modules.tenants.module.tenantsModule
 import org.igorv8836.rentcontrol.server.modules.users.data.repo.ExposedUsersRepository
@@ -46,6 +49,7 @@ fun Application.module() {
     val sessionsRepository = ExposedAuthSessionRepository(database)
     val otpRepository = ExposedOtpRepository(database)
     val objectsRepository = ExposedObjectsRepository(database)
+    val expensesRepository = ExposedExpensesRepository(database)
 
     val passwordHasher = PasswordHasher()
     val tokenService = TokenService()
@@ -67,6 +71,11 @@ fun Application.module() {
 
     val objectsService = ObjectsService(
         objectsRepository = objectsRepository,
+        usersRepository = usersRepository,
+    )
+
+    val expensesService = ExpensesService(
+        expensesRepository = expensesRepository,
         usersRepository = usersRepository,
     )
 
@@ -102,6 +111,7 @@ fun Application.module() {
             authModule(authService)
             meModule(meService)
             objectsModule(objectsService)
+            expensesModule(expensesService)
             tenantsModule(tenantsService)
         }
     }

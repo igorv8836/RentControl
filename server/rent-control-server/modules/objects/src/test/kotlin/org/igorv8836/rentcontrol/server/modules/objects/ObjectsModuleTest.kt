@@ -358,6 +358,9 @@ class ObjectsModuleTest {
                 nextInspectionAt = Instant.parse("2026-01-10T00:00:00Z"),
                 lastInspectionAt = Instant.parse("2026-01-09T00:00:00Z"),
                 lastMeterReadingAt = Instant.parse("2026-01-08T00:00:00Z"),
+                expensesPlannedAmount = 100.0,
+                expensesActualAmount = 120.0,
+                expensesPendingCount = 1,
             )
 
         override suspend fun listActivity(objectId: Long, limit: Int): List<ObjectActivityEvent> =

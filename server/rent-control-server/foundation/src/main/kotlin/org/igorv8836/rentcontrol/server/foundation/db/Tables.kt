@@ -14,6 +14,8 @@ val allTables = arrayOf(
     ActsTable,
     InvoicesTable,
     InvoiceItemsTable,
+    ExpensesTable,
+    ExpenseApprovalsTable,
     MeterReadingsTable,
     MediaFilesTable,
     NotificationsTable,

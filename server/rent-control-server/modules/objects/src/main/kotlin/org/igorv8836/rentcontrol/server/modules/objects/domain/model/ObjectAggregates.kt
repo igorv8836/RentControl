@@ -8,5 +8,7 @@ data class ObjectAggregates(
     val nextInspectionAt: Instant?,
     val lastInspectionAt: Instant?,
     val lastMeterReadingAt: Instant?,
+    val expensesPlannedAmount: Double,
+    val expensesActualAmount: Double,
+    val expensesPendingCount: Long,
 )
-

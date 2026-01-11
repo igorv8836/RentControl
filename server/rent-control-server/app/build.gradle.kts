@@ -18,6 +18,7 @@ dependencies {
     implementation(project(":server:rent-control-server:modules:auth"))
     implementation(project(":server:rent-control-server:modules:me"))
     implementation(project(":server:rent-control-server:modules:objects"))
+    implementation(project(":server:rent-control-server:modules:expenses"))
     implementation(project(":server:rent-control-server:modules:tenants"))
     implementation(project(":server:rent-control-server:modules:users"))
 

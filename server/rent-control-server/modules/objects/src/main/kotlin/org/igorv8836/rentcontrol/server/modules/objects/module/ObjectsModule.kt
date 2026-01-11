@@ -17,6 +17,7 @@ import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectActivityRe
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectActivityItem
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectDefectsOverviewResponse
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectDetailsResponse
+import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectExpensesOverviewResponse
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectInspectionsOverviewResponse
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectListItem
 import org.igorv8836.rentcontrol.server.modules.objects.api.dto.ObjectMetersOverviewResponse
@@ -230,6 +231,12 @@ private fun ObjectAggregates.toOverviewResponse(): ObjectOverviewResponse =
         ),
         meters = ObjectMetersOverviewResponse(
             lastReadingAt = lastMeterReadingAt?.toIsoString(),
+        ),
+        expenses = ObjectExpensesOverviewResponse(
+            plannedAmount = expensesPlannedAmount,
+            actualAmount = expensesActualAmount,
+            deviationAmount = expensesActualAmount - expensesPlannedAmount,
+            pendingCount = expensesPendingCount,
         ),
     )
 

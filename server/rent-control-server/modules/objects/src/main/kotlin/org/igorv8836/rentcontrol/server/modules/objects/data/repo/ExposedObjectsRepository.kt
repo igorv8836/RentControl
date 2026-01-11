@@ -2,6 +2,7 @@ package org.igorv8836.rentcontrol.server.modules.objects.data.repo
 
 import org.igorv8836.rentcontrol.server.foundation.db.AuditLogTable
 import org.igorv8836.rentcontrol.server.foundation.db.DefectsTable
+import org.igorv8836.rentcontrol.server.foundation.db.ExpensesTable
 import org.igorv8836.rentcontrol.server.foundation.db.InspectionsTable
 import org.igorv8836.rentcontrol.server.foundation.db.MeterReadingsTable
 import org.igorv8836.rentcontrol.server.foundation.db.PropertiesTable
@@ -29,13 +30,16 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNotNull
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.count
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.sum
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.update
 import org.jetbrains.exposed.dao.id.EntityID
@@ -137,12 +141,56 @@ class ExposedObjectsRepository(
                 .singleOrNull()
                 ?.let { row -> row[MeterReadingsTable.recordedAt].toInstant() }
 
+            val monthStart = nowOffset.toLocalDate().withDayOfMonth(1)
+            val monthEnd = monthStart.plusMonths(1).minusDays(1)
+
+            val plannedSumExpr = ExpensesTable.amount.sum()
+            val expensesPlannedAmount = ExpensesTable
+                .select(plannedSumExpr)
+                .where {
+                    (ExpensesTable.propertyId eq propertyId) and
+                        (ExpensesTable.type eq "plan") and
+                        (ExpensesTable.status neq "canceled") and
+                        (ExpensesTable.expenseDate greaterEq monthStart) and
+                        (ExpensesTable.expenseDate lessEq monthEnd)
+                }
+                .singleOrNull()
+                ?.get(plannedSumExpr)
+                ?: BigDecimal.ZERO
+
+            val actualSumExpr = ExpensesTable.amount.sum()
+            val expensesActualAmount = ExpensesTable
+                .select(actualSumExpr)
+                .where {
+                    (ExpensesTable.propertyId eq propertyId) and
+                        (ExpensesTable.type eq "fact") and
+                        (ExpensesTable.status neq "canceled") and
+                        (ExpensesTable.expenseDate greaterEq monthStart) and
+                        (ExpensesTable.expenseDate lessEq monthEnd)
+                }
+                .singleOrNull()
+                ?.get(actualSumExpr)
+                ?: BigDecimal.ZERO
+
+            val expensesPendingCount = ExpensesTable
+                .selectAll()
+                .where {
+                    (ExpensesTable.propertyId eq propertyId) and
+                        (ExpensesTable.status eq "pending") and
+                        (ExpensesTable.expenseDate greaterEq monthStart) and
+                        (ExpensesTable.expenseDate lessEq monthEnd)
+                }
+                .count()
+
             ObjectAggregates(
                 defectsOpenCount = defectsOpenCount,
                 defectsOverdueCount = defectsOverdueCount,
                 nextInspectionAt = nextInspectionAt,
                 lastInspectionAt = lastInspectionAt,
                 lastMeterReadingAt = lastMeterReadingAt,
+                expensesPlannedAmount = expensesPlannedAmount.toDouble(),
+                expensesActualAmount = expensesActualAmount.toDouble(),
+                expensesPendingCount = expensesPendingCount,
             )
         }
 

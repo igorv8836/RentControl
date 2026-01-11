@@ -74,6 +74,7 @@ data class ObjectOverviewResponse(
     val defects: ObjectDefectsOverviewResponse,
     val inspections: ObjectInspectionsOverviewResponse,
     val meters: ObjectMetersOverviewResponse,
+    val expenses: ObjectExpensesOverviewResponse,
 )
 
 @Serializable
@@ -91,6 +92,14 @@ data class ObjectInspectionsOverviewResponse(
 @Serializable
 data class ObjectMetersOverviewResponse(
     val lastReadingAt: String? = null,
+)
+
+@Serializable
+data class ObjectExpensesOverviewResponse(
+    val plannedAmount: Double,
+    val actualAmount: Double,
+    val deviationAmount: Double,
+    val pendingCount: Long,
 )
 
 @Serializable
